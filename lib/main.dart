@@ -1,7 +1,3 @@
-// FITTRACKER - VERSÃO COMPLETA E SIMPLIFICADA PARA AULA
-// Copie este arquivo para lib/main.dart do seu projeto Flutter
-// Execute com: flutter run
-
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -44,8 +40,16 @@ class Exercise {
   });
 }
 
+// Modelo para histórico de descansos
+class RestRecord {
+  final int seconds;
+  final DateTime time;
+
+  RestRecord({required this.seconds, required this.time});
+}
+
 // ========================================
-// TELA HOME
+// TELA HOME (sem alterações da aula 1)
 // ========================================
 class HomeScreen extends StatelessWidget {
   final List<Exercise> exercises = [
@@ -76,77 +80,81 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Header com contador
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.orange, Colors.deepOrange],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.orange, Colors.deepOrange],
+                ),
+              ),
+              child: Column(
+                children: [
+                  SizedBox(height: 20),
+                  Icon(Icons.fitness_center, size: 48, color: Colors.white),
+                  SizedBox(height: 8),
+                  Text(
+                    'Meus Treinos',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 20),
-                    Icon(Icons.fitness_center, size: 48, color: Colors.white),
-                    SizedBox(height: 8),
-                    Text(
-                      'Meus Treinos',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    WorkoutCounter(),
-                    SizedBox(height: 20),
-                  ],
-                ),
+                  SizedBox(height: 20),
+                  WorkoutCounter(),
+                  SizedBox(height: 20),
+                ],
               ),
+            ),
 
-              // Lista de exercícios
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Treino de Hoje',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+            // Lista de exercícios
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Treino de Hoje',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
-                        Chip(
-                          label: Text('${exercises.length} exercícios'),
-                          backgroundColor: Colors.orange[100],
+                      ),
+                      Chip(
+                        label: Text('${exercises.length} exercícios'),
+                        backgroundColor: Colors.orange[100],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+                  ...exercises
+                      .asMap()
+                      .entries
+                      .map(
+                        (entry) => ExerciseCard(
+                          exercise: entry.value,
+                          index: entry.key,
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    ...exercises.asMap().entries.map(
-                      (entry) =>
-                          ExerciseCard(exercise: entry.value, index: entry.key),
-                    ),
-                  ],
-                ),
+                      )
+                      .toList(),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Treino iniciado! Bora treinar! 💪'),
+              content: Text('Treino iniciado!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -159,7 +167,7 @@ class HomeScreen extends StatelessWidget {
 }
 
 // ========================================
-// WIDGET: CONTADOR DE TREINOS (STATEFUL)
+// WORKOUT COUNTER (sem alterações)
 // ========================================
 class WorkoutCounter extends StatefulWidget {
   @override
@@ -188,16 +196,6 @@ class _WorkoutCounterState extends State<WorkoutCounter> {
 
   double get _progress => _workoutsThisWeek / _weeklyGoal;
 
-  String _getMotivationalMessage() {
-    if (_workoutsThisWeek == 0) {
-      return 'Vamos começar! Todo treino conta! 💪';
-    } else if (_workoutsThisWeek < _weeklyGoal) {
-      return 'Continue assim! Faltam ${_weeklyGoal - _workoutsThisWeek} treinos!';
-    } else {
-      return 'Meta atingida! Você é incrível! 🎉';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -212,8 +210,6 @@ class _WorkoutCounterState extends State<WorkoutCounter> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             SizedBox(height: 16),
-
-            // Contador
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -231,10 +227,7 @@ class _WorkoutCounterState extends State<WorkoutCounter> {
                 ),
               ],
             ),
-
             SizedBox(height: 16),
-
-            // Barra de progresso
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
@@ -248,19 +241,7 @@ class _WorkoutCounterState extends State<WorkoutCounter> {
                 ),
               ),
             ),
-
-            SizedBox(height: 16),
-
-            // Mensagem
-            Text(
-              _getMotivationalMessage(),
-              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-              textAlign: TextAlign.center,
-            ),
-
             SizedBox(height: 20),
-
-            // Botões
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -288,7 +269,7 @@ class _WorkoutCounterState extends State<WorkoutCounter> {
 }
 
 // ========================================
-// WIDGET: CARD DE EXERCÍCIO (STATELESS)
+// EXERCISE CARD (sem alterações)
 // ========================================
 class ExerciseCard extends StatelessWidget {
   final Exercise exercise;
@@ -313,21 +294,6 @@ class ExerciseCard extends StatelessWidget {
     }
   }
 
-  IconData _getCategoryIcon() {
-    switch (exercise.category.toLowerCase()) {
-      case 'peito':
-        return Icons.favorite;
-      case 'costas':
-        return Icons.arrow_back;
-      case 'pernas':
-        return Icons.directions_run;
-      case 'ombros':
-        return Icons.accessibility_new;
-      default:
-        return Icons.fitness_center;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -336,7 +302,6 @@ class ExerciseCard extends StatelessWidget {
         padding: EdgeInsets.all(16),
         child: Row(
           children: [
-            // Número
             Container(
               width: 40,
               height: 40,
@@ -354,10 +319,7 @@ class ExerciseCard extends StatelessWidget {
                 ),
               ),
             ),
-
             SizedBox(width: 16),
-
-            // Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,28 +329,13 @@ class ExerciseCard extends StatelessWidget {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        _getCategoryIcon(),
-                        size: 14,
-                        color: _getCategoryColor(),
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        exercise.category,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _getCategoryColor(),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    exercise.category,
+                    style: TextStyle(fontSize: 12, color: _getCategoryColor()),
                   ),
                 ],
               ),
             ),
-
-            // Séries
             Container(
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -400,22 +347,6 @@ class ExerciseCard extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-
-            SizedBox(width: 8),
-
-            // Check
-            IconButton(
-              icon: Icon(Icons.check_circle_outline),
-              color: Colors.grey,
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${exercise.name} completo! ✓'),
-                    duration: Duration(seconds: 1),
-                  ),
-                );
-              },
-            ),
           ],
         ),
       ),
@@ -424,18 +355,49 @@ class ExerciseCard extends StatelessWidget {
 }
 
 // ========================================
-// TELA: TIMER DE DESCANSO (STATEFUL)
+// TIMER SCREEN - VERSÃO EXPANDIDA
 // ========================================
+// Este é o foco da aula 3!
+// Demonstra ciclo de vida completo do StatefulWidget
+
 class TimerScreen extends StatefulWidget {
   @override
   _TimerScreenState createState() => _TimerScreenState();
 }
 
 class _TimerScreenState extends State<TimerScreen> {
+  // Estado do timer
   int _remainingSeconds = 60;
-  int _initialSeconds = 60;
+  int _selectedSeconds = 60;
   Timer? _timer;
   bool _isRunning = false;
+
+  // Histórico de descansos
+  List<RestRecord> _history = [];
+
+  // Presets disponíveis (em segundos)
+  final List<int> _presets = [30, 60, 90, 120];
+
+  // ============ CICLO DE VIDA ============
+
+  @override
+  void initState() {
+    super.initState();
+    // Chamado uma vez quando o widget é criado
+    // Use para inicialização
+    debugPrint('TimerScreen: initState()');
+  }
+
+  @override
+  void dispose() {
+    // Chamado quando o widget é removido
+    // IMPORTANTE: Sempre cancele timers aqui!
+    debugPrint('TimerScreen: dispose()');
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // ============ MÉTODOS DO TIMER ============
 
   void _startTimer() {
     setState(() {
@@ -443,18 +405,24 @@ class _TimerScreenState extends State<TimerScreen> {
     });
 
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        if (_remainingSeconds > 0) {
+      // IMPORTANTE: Verificar mounted antes de setState
+      // Evita erros se o widget foi removido durante o callback
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (_remainingSeconds > 0) {
+        setState(() {
           _remainingSeconds--;
-        } else {
-          _stopTimer();
-          _showCompletionDialog();
-        }
-      });
+        });
+      } else {
+        _onTimerComplete();
+      }
     });
   }
 
-  void _stopTimer() {
+  void _pauseTimer() {
     _timer?.cancel();
     setState(() {
       _isRunning = false;
@@ -462,144 +430,246 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 
   void _resetTimer() {
-    _stopTimer();
+    _timer?.cancel();
     setState(() {
-      _remainingSeconds = _initialSeconds;
+      _isRunning = false;
+      _remainingSeconds = _selectedSeconds;
     });
   }
 
-  void _setTime(int seconds) {
+  void _selectPreset(int seconds) {
+    _timer?.cancel();
     setState(() {
-      _initialSeconds = seconds;
+      _selectedSeconds = seconds;
       _remainingSeconds = seconds;
+      _isRunning = false;
     });
   }
 
-  void _showCompletionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Descanso Completo!'),
-        content: Text('Hora de voltar ao treino! 💪'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _resetTimer();
-            },
-            child: Text('OK'),
-          ),
-        ],
+  void _onTimerComplete() {
+    _timer?.cancel();
+
+    setState(() {
+      _isRunning = false;
+      // Adiciona ao histórico
+      _history.add(RestRecord(seconds: _selectedSeconds, time: DateTime.now()));
+      // Reseta para o tempo selecionado
+      _remainingSeconds = _selectedSeconds;
+    });
+
+    // Mostra feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Descanso completo! Hora de treinar!'),
+        backgroundColor: Colors.green,
       ),
     );
   }
 
+  void _clearHistory() {
+    setState(() {
+      _history.clear();
+    });
+  }
+
+  // ============ HELPERS ============
+
   String _formatTime(int seconds) {
-    int minutes = seconds ~/ 60;
+    int mins = seconds ~/ 60;
     int secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
-  double get _progress =>
-      _initialSeconds > 0 ? _remainingSeconds / _initialSeconds : 0;
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  String _formatPreset(int seconds) {
+    if (seconds >= 60) {
+      int mins = seconds ~/ 60;
+      int secs = seconds % 60;
+      return secs > 0 ? '${mins}m${secs}s' : '${mins}min';
+    }
+    return '${seconds}s';
   }
+
+  double get _progress {
+    if (_selectedSeconds == 0) return 0;
+    return _remainingSeconds / _selectedSeconds;
+  }
+
+  // ============ BUILD ============
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Timer de Descanso')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Tempo de Descanso',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 40),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            children: [
+              SizedBox(height: 20),
 
-            // Timer circular
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 250,
-                  height: 250,
-                  child: CircularProgressIndicator(
-                    value: _progress,
-                    strokeWidth: 12,
-                    backgroundColor: Colors.grey[200],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      _remainingSeconds <= 10 ? Colors.red : Colors.orange,
+              // Seletor de tempo
+              Text(
+                'Selecione o tempo:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                children: _presets.map((seconds) {
+                  bool isSelected = _selectedSeconds == seconds;
+                  return ChoiceChip(
+                    label: Text(_formatPreset(seconds)),
+                    selected: isSelected,
+                    selectedColor: Colors.orange,
+                    onSelected: _isRunning
+                        ? null
+                        : (_) => _selectPreset(seconds),
+                  );
+                }).toList(),
+              ),
+
+              SizedBox(height: 40),
+
+              // Timer circular
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 220,
+                    height: 220,
+                    child: CircularProgressIndicator(
+                      value: _progress,
+                      strokeWidth: 12,
+                      backgroundColor: Colors.grey[200],
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _remainingSeconds <= 10 ? Colors.red : Colors.orange,
+                      ),
                     ),
                   ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _isRunning ? Icons.timer : Icons.timer_outlined,
+                        size: 32,
+                        color: Colors.grey,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        _formatTime(_remainingSeconds),
+                        style: TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          color: _remainingSeconds <= 10
+                              ? Colors.red
+                              : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 40),
+
+              // Botões de controle
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Botão Reset
+                  FloatingActionButton(
+                    heroTag: 'reset',
+                    onPressed: _resetTimer,
+                    backgroundColor: Colors.grey,
+                    child: Icon(Icons.refresh),
+                  ),
+                  SizedBox(width: 20),
+                  // Botão Play/Pause
+                  FloatingActionButton.large(
+                    heroTag: 'playPause',
+                    onPressed: _isRunning ? _pauseTimer : _startTimer,
+                    backgroundColor: _isRunning ? Colors.red : Colors.green,
+                    child: Icon(
+                      _isRunning ? Icons.pause : Icons.play_arrow,
+                      size: 40,
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  // Botão Skip (completa o timer)
+                  FloatingActionButton(
+                    heroTag: 'skip',
+                    onPressed: _isRunning ? _onTimerComplete : null,
+                    backgroundColor: _isRunning
+                        ? Colors.orange
+                        : Colors.grey[300],
+                    child: Icon(Icons.skip_next),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 40),
+
+              // Histórico de descansos
+              if (_history.isNotEmpty) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Histórico de Descansos',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton(onPressed: _clearHistory, child: Text('Limpar')),
+                  ],
                 ),
-                Text(
-                  _formatTime(_remainingSeconds),
-                  style: TextStyle(
-                    fontSize: 64,
-                    fontWeight: FontWeight.bold,
-                    color: _remainingSeconds <= 10 ? Colors.red : Colors.orange,
+                SizedBox(height: 8),
+                Container(
+                  height: 80,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _history.length,
+                    itemBuilder: (context, index) {
+                      // Mostra do mais recente para o mais antigo
+                      final record = _history[_history.length - 1 - index];
+                      return Container(
+                        margin: EdgeInsets.only(right: 12),
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange[200]!),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _formatPreset(record.seconds),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange[800],
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              '${record.time.hour}:${record.time.minute.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
-            ),
-
-            SizedBox(height: 60),
-
-            // Botões
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FloatingActionButton.large(
-                  onPressed: _isRunning ? _stopTimer : _startTimer,
-                  backgroundColor: _isRunning ? Colors.red : Colors.green,
-                  child: Icon(
-                    _isRunning ? Icons.pause : Icons.play_arrow,
-                    size: 40,
-                  ),
-                ),
-                SizedBox(width: 20),
-                FloatingActionButton(
-                  onPressed: _resetTimer,
-                  backgroundColor: Colors.grey[700],
-                  child: Icon(Icons.refresh),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 60),
-
-            // Tempos rápidos
-            Text('Tempos Rápidos', style: TextStyle(fontSize: 16)),
-            SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              children: [
-                _buildTimeChip('30s', 30),
-                _buildTimeChip('60s', 60),
-                _buildTimeChip('90s', 90),
-                _buildTimeChip('2min', 120),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTimeChip(String label, int seconds) {
-    bool isSelected = _initialSeconds == seconds;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => _setTime(seconds),
-      selectedColor: Colors.orange,
     );
   }
 }
