@@ -1,17 +1,22 @@
 import 'package:fittracker/widgets/workout_counter.dart';
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void dispose() {
+    debugPrint('HomeScreen: dispose()');
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -22,7 +27,7 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.timer),
             onPressed: () {
-              print('Timer icon pressed');
+              Navigator.pushNamed(context, '/timer');
             },
           ),
         ],
