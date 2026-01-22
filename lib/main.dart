@@ -1,4 +1,5 @@
 import 'package:fittracker/screens/home_screen.dart';
+import 'package:fittracker/screens/new_exercise_screen.dart';
 import 'package:fittracker/screens/timer_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -21,6 +22,7 @@ class FitTrackerApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => HomeScreen(),
+        '/exercise/new': (context) => NewExerciseScreen(),
         '/timer': (context) => TimerScreen(),
       },
     );

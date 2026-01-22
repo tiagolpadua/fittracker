@@ -55,6 +55,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.pushNamed(context, '/exercise/new');
+        },
+        icon: Icon(Icons.add),
+        label: Text('Novo Exercício'),
+      ),
     );
   }
 }
