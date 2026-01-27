@@ -95,13 +95,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     )..repeat(reverse: true);
 
     // Animacao inicial do progresso
-    _progressAnimation = Tween<double>(
-      begin: 0,
-      end: 0,
-    ).animate(CurvedAnimation(
-      parent: _progressController,
-      curve: Curves.easeOut,
-    ));
+    _progressAnimation = Tween<double>(begin: 0, end: 0).animate(
+      CurvedAnimation(parent: _progressController, curve: Curves.easeOut),
+    );
 
     // Iniciar animacoes apos build
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -157,13 +153,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final newProgress = _workoutsThisWeek / _weeklyGoal;
 
       // Animar progresso do valor atual para o novo
-      _progressAnimation = Tween<double>(
-        begin: oldProgress,
-        end: newProgress,
-      ).animate(CurvedAnimation(
-        parent: _progressController,
-        curve: Curves.elasticOut,
-      ));
+      _progressAnimation = Tween<double>(begin: oldProgress, end: newProgress)
+          .animate(
+            CurvedAnimation(
+              parent: _progressController,
+              curve: Curves.elasticOut,
+            ),
+          );
       _progressController.forward(from: 0);
     }
   }
@@ -176,13 +172,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       });
       final newProgress = _workoutsThisWeek / _weeklyGoal;
 
-      _progressAnimation = Tween<double>(
-        begin: oldProgress,
-        end: newProgress,
-      ).animate(CurvedAnimation(
-        parent: _progressController,
-        curve: Curves.easeOut,
-      ));
+      _progressAnimation = Tween<double>(begin: oldProgress, end: newProgress)
+          .animate(
+            CurvedAnimation(parent: _progressController, curve: Curves.easeOut),
+          );
       _progressController.forward(from: 0);
     }
   }
@@ -362,10 +355,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: [
               Text(
                 'Progresso Semanal',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
               ),
               SizedBox(height: 24),
 
@@ -406,7 +396,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   fontSize: 48,
                                   fontWeight: FontWeight.bold,
                                   color: _getProgressColor(
-                                      _workoutsThisWeek / _weeklyGoal),
+                                    _workoutsThisWeek / _weeklyGoal,
+                                  ),
                                 ),
                               );
                             },
@@ -427,10 +418,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
               SizedBox(height: 24),
 
-              Row(children: [
-                ???
-              ],)
-
               // Botoes de controle
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -439,8 +426,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   AnimatedContainer(
                     duration: Duration(milliseconds: 200),
                     child: ElevatedButton.icon(
-                      onPressed:
-                          _workoutsThisWeek > 0 ? _decrementWorkout : null,
+                      onPressed: _workoutsThisWeek > 0
+                          ? _decrementWorkout
+                          : null,
                       icon: Icon(Icons.remove),
                       label: Text('Remover'),
                       style: ElevatedButton.styleFrom(
@@ -457,12 +445,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       onPressed: _workoutsThisWeek >= _weeklyGoal
                           ? null
                           : _incrementWorkout,
-                      icon: Icon(_workoutsThisWeek >= _weeklyGoal
-                          ? Icons.check
-                          : Icons.add),
-                      label: Text(_workoutsThisWeek >= _weeklyGoal
-                          ? 'Meta Atingida!'
-                          : 'Concluir'),
+                      icon: Icon(
+                        _workoutsThisWeek >= _weeklyGoal
+                            ? Icons.check
+                            : Icons.add,
+                      ),
+                      label: Text(
+                        _workoutsThisWeek >= _weeklyGoal
+                            ? 'Meta Atingida!'
+                            : 'Concluir',
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _workoutsThisWeek >= _weeklyGoal
                             ? Colors.green
@@ -495,22 +487,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             final endInterval = (startInterval + 0.4).clamp(0.0, 1.0);
 
             // Animacao de slide da direita
-            final slideAnimation = Tween<Offset>(
-              begin: Offset(1, 0),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(
-                parent: _listController,
-                curve:
-                    Interval(startInterval, endInterval, curve: Curves.easeOut),
-              ),
-            );
+            final slideAnimation =
+                Tween<Offset>(begin: Offset(1, 0), end: Offset.zero).animate(
+                  CurvedAnimation(
+                    parent: _listController,
+                    curve: Interval(
+                      startInterval,
+                      endInterval,
+                      curve: Curves.easeOut,
+                    ),
+                  ),
+                );
 
             // Animacao de fade
-            final fadeAnimation = Tween<double>(
-              begin: 0,
-              end: 1,
-            ).animate(
+            final fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
               CurvedAnimation(
                 parent: _listController,
                 curve: Interval(startInterval, endInterval),
