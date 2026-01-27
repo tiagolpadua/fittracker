@@ -7,11 +7,11 @@ class Exercise {
   final double? weight;
 
   Exercise({
-    required this.id,
+    String? id,
     required this.name,
     required this.sets,
     required this.reps,
     required this.category,
     this.weight,
-  });
+  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
 }
