@@ -4,6 +4,8 @@ import '../../core/settings/app_settings.dart';
 import '../../models/exercise.dart';
 import '../../widgets/exercise_card.dart';
 
+/// HomeScreen com animacoes
+/// Demonstra: AnimationController, Staggered Animations, Tween, Curves
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -11,7 +13,19 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  // Controllers de animacao
+  late AnimationController _listController;
+  late AnimationController _progressController;
+  late AnimationController _pulseController;
+
+  // Animacao do progresso
+  late Animation<double> _progressAnimation;
+
+  // Estado de conteudo
+  bool _showContent = false;
+
+  // Dados
   final List<Exercise> _exercises = [
     Exercise(
       id: '1',
@@ -37,10 +51,72 @@ class _HomeScreenState extends State<HomeScreen> {
       category: 'Costas',
       weight: 50,
     ),
+    Exercise(
+      id: '4',
+      name: 'Desenvolvimento',
+      sets: 4,
+      reps: 10,
+      category: 'Ombros',
+      weight: 30,
+    ),
+    Exercise(
+      id: '5',
+      name: 'Rosca Direta',
+      sets: 3,
+      reps: 15,
+      category: 'Biceps',
+      weight: 15,
+    ),
   ];
 
   int _workoutsThisWeek = 0;
   final int _weeklyGoal = 5;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Controller para lista staggered (1.5s total)
+    _listController = AnimationController(
+      duration: Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    // Controller para progresso (1s)
+    _progressController = AnimationController(
+      duration: Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    // Controller para pulse do FAB (loop)
+    _pulseController = AnimationController(
+      duration: Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    // Animacao inicial do progresso
+    _progressAnimation = Tween<double>(
+      begin: 0,
+      end: 0,
+    ).animate(CurvedAnimation(
+      parent: _progressController,
+      curve: Curves.easeOut,
+    ));
+
+    // Iniciar animacoes apos build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() => _showContent = true);
+      _listController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _listController.dispose();
+    _progressController.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   void _addNewExercise() async {
     final result = await Navigator.pushNamed(context, '/exercise/new');
@@ -50,12 +126,19 @@ class _HomeScreenState extends State<HomeScreen> {
         _exercises.add(result);
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${result.name} adicionado!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // Replay animacao para mostrar novo item
+      _listController.reset();
+      _listController.forward();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${result.name} adicionado!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -66,11 +149,53 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _incrementWorkout() {
-    setState(() {
-      if (_workoutsThisWeek < _weeklyGoal) {
+    if (_workoutsThisWeek < _weeklyGoal) {
+      final oldProgress = _workoutsThisWeek / _weeklyGoal;
+      setState(() {
         _workoutsThisWeek++;
-      }
-    });
+      });
+      final newProgress = _workoutsThisWeek / _weeklyGoal;
+
+      // Animar progresso do valor atual para o novo
+      _progressAnimation = Tween<double>(
+        begin: oldProgress,
+        end: newProgress,
+      ).animate(CurvedAnimation(
+        parent: _progressController,
+        curve: Curves.elasticOut,
+      ));
+      _progressController.forward(from: 0);
+    }
+  }
+
+  void _decrementWorkout() {
+    if (_workoutsThisWeek > 0) {
+      final oldProgress = _workoutsThisWeek / _weeklyGoal;
+      setState(() {
+        _workoutsThisWeek--;
+      });
+      final newProgress = _workoutsThisWeek / _weeklyGoal;
+
+      _progressAnimation = Tween<double>(
+        begin: oldProgress,
+        end: newProgress,
+      ).animate(CurvedAnimation(
+        parent: _progressController,
+        curve: Curves.easeOut,
+      ));
+      _progressController.forward(from: 0);
+    }
+  }
+
+  void _replayListAnimation() {
+    _listController.reset();
+    _listController.forward();
+  }
+
+  Color _getProgressColor(double progress) {
+    if (progress < 0.3) return Colors.red;
+    if (progress < 0.7) return Colors.orange;
+    return Colors.green;
   }
 
   @override
@@ -78,149 +203,352 @@ class _HomeScreenState extends State<HomeScreen> {
     final settings = AppSettings.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('FitTracker'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.timer),
-            onPressed: () => Navigator.pushNamed(context, '/timer'),
+      body: CustomScrollView(
+        slivers: [
+          // AppBar animada
+          SliverAppBar(
+            expandedHeight: 200,
+            floating: false,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text('FitTracker'),
+              background: AnimatedContainer(
+                duration: Duration(milliseconds: 500),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: settings.isDarkMode
+                        ? [Colors.grey[800]!, Colors.grey[900]!]
+                        : [Colors.orange, Colors.deepOrange],
+                  ),
+                ),
+                child: Center(
+                  child: AnimatedOpacity(
+                    duration: Duration(milliseconds: 800),
+                    opacity: _showContent ? 1 : 0,
+                    child: Icon(
+                      Icons.fitness_center,
+                      size: 80,
+                      color: Colors.white.withOpacity(0.3),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.replay),
+                onPressed: _replayListAnimation,
+                tooltip: 'Replay animacao',
+              ),
+              IconButton(
+                icon: Icon(Icons.timer),
+                onPressed: () => Navigator.pushNamed(context, '/timer'),
+                tooltip: 'Timer',
+              ),
+              IconButton(
+                icon: Icon(Icons.settings),
+                onPressed: () => Navigator.pushNamed(context, '/settings'),
+                tooltip: 'Configuracoes',
+              ),
+            ],
           ),
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () => Navigator.pushNamed(context, '/settings'),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeader(settings),
-            Padding(
+
+          // Conteudo
+          SliverToBoxAdapter(
+            child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Treino de Hoje',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                  // Card de Progresso Animado
+                  _buildProgressCard(),
+
+                  SizedBox(height: 24),
+
+                  // Titulo da lista com fade
+                  AnimatedOpacity(
+                    duration: Duration(milliseconds: 500),
+                    opacity: _showContent ? 1 : 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Treino de Hoje',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        AnimatedContainer(
+                          duration: Duration(milliseconds: 300),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${_exercises.length} exercicios',
+                            style: TextStyle(
+                              color: Colors.orange[800],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 16),
+
+                  // Lista de exercicios com staggered animation
+                  _buildStaggeredList(),
+
+                  // Mensagem se lista vazia
+                  if (_exercises.isEmpty)
+                    AnimatedOpacity(
+                      duration: Duration(milliseconds: 500),
+                      opacity: _showContent ? 1 : 0,
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.fitness_center,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'Nenhum exercicio cadastrado',
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Toque no botao + para adicionar',
+                                style: TextStyle(color: Colors.grey[400]),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      Chip(
-                        label: Text('${_exercises.length} exercícios'),
-                        backgroundColor: Colors.orange[100],
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: _buildAnimatedFAB(),
+    );
+  }
+
+  /// Card de progresso com animacao explicita (AnimationController)
+  Widget _buildProgressCard() {
+    return AnimatedOpacity(
+      duration: Duration(milliseconds: 600),
+      opacity: _showContent ? 1 : 0,
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Text(
+                'Progresso Semanal',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 24),
+
+              // Progresso circular animado
+              AnimatedBuilder(
+                animation: _progressController,
+                builder: (context, child) {
+                  // Calcular progresso visual
+                  final displayProgress = _progressController.isAnimating
+                      ? _progressAnimation.value
+                      : _workoutsThisWeek / _weeklyGoal;
+
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 150,
+                        height: 150,
+                        child: CircularProgressIndicator(
+                          value: displayProgress,
+                          strokeWidth: 12,
+                          backgroundColor: Colors.grey[200],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _getProgressColor(displayProgress),
+                          ),
+                        ),
+                      ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TweenAnimationBuilder<int>(
+                            tween: IntTween(begin: 0, end: _workoutsThisWeek),
+                            duration: Duration(milliseconds: 500),
+                            builder: (context, value, child) {
+                              return Text(
+                                '$value',
+                                style: TextStyle(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  color: _getProgressColor(
+                                      _workoutsThisWeek / _weeklyGoal),
+                                ),
+                              );
+                            },
+                          ),
+                          Text(
+                            'de $_weeklyGoal',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
+                  );
+                },
+              ),
+
+              SizedBox(height: 24),
+
+              Row(children: [
+                ???
+              ],)
+
+              // Botoes de controle
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Botao diminuir
+                  AnimatedContainer(
+                    duration: Duration(milliseconds: 200),
+                    child: ElevatedButton.icon(
+                      onPressed:
+                          _workoutsThisWeek > 0 ? _decrementWorkout : null,
+                      icon: Icon(Icons.remove),
+                      label: Text('Remover'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey,
+                      ),
+                    ),
                   ),
-                  SizedBox(height: 16),
-                  ..._exercises.map(
-                    (exercise) => ExerciseCard(
-                      key: ValueKey(exercise.id),
-                      exercise: exercise,
-                      onDelete: () => _removeExercise(exercise.id),
+                  SizedBox(width: 16),
+                  // Botao aumentar
+                  AnimatedContainer(
+                    duration: Duration(milliseconds: 300),
+                    width: _workoutsThisWeek >= _weeklyGoal ? 180 : 160,
+                    child: ElevatedButton.icon(
+                      onPressed: _workoutsThisWeek >= _weeklyGoal
+                          ? null
+                          : _incrementWorkout,
+                      icon: Icon(_workoutsThisWeek >= _weeklyGoal
+                          ? Icons.check
+                          : Icons.add),
+                      label: Text(_workoutsThisWeek >= _weeklyGoal
+                          ? 'Meta Atingida!'
+                          : 'Concluir'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _workoutsThisWeek >= _weeklyGoal
+                            ? Colors.green
+                            : Colors.orange,
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addNewExercise,
-        icon: Icon(Icons.add),
-        label: Text('Novo Exercício'),
-      ),
-    );
-  }
-
-  Widget _buildHeader(AppSettings settings) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: settings.isDarkMode
-              ? [Colors.grey[800]!, Colors.grey[900]!]
-              : [Colors.orange, Colors.deepOrange],
-        ),
-      ),
-      child: Column(
-        children: [
-          SizedBox(height: 20),
-          Icon(Icons.fitness_center, size: 48, color: Colors.white),
-          SizedBox(height: 8),
-          Text(
-            'Meus Treinos',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            ],
           ),
-          SizedBox(height: 20),
-          _buildWorkoutCounter(),
-          SizedBox(height: 20),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildWorkoutCounter() {
-    double progress = _workoutsThisWeek / _weeklyGoal;
+  /// Lista com staggered animation (cada item aparece em sequencia)
+  Widget _buildStaggeredList() {
+    return AnimatedBuilder(
+      animation: _listController,
+      builder: (context, child) {
+        return Column(
+          children: List.generate(_exercises.length, (index) {
+            // Calcular intervalo para cada item (escalonado)
+            final startInterval = index * 0.1;
+            final endInterval = (startInterval + 0.4).clamp(0.0, 1.0);
 
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16),
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Text(
-              'Treinos desta Semana',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '$_workoutsThisWeek',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange,
-                  ),
-                ),
-                Text(
-                  ' / $_weeklyGoal',
-                  style: TextStyle(fontSize: 24, color: Colors.grey),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 12,
-                backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  progress >= 1 ? Colors.green : Colors.orange,
+            // Animacao de slide da direita
+            final slideAnimation = Tween<Offset>(
+              begin: Offset(1, 0),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: _listController,
+                curve:
+                    Interval(startInterval, endInterval, curve: Curves.easeOut),
+              ),
+            );
+
+            // Animacao de fade
+            final fadeAnimation = Tween<double>(
+              begin: 0,
+              end: 1,
+            ).animate(
+              CurvedAnimation(
+                parent: _listController,
+                curve: Interval(startInterval, endInterval),
+              ),
+            );
+
+            return SlideTransition(
+              position: slideAnimation,
+              child: FadeTransition(
+                opacity: fadeAnimation,
+                child: ExerciseCard(
+                  key: ValueKey(_exercises[index].id),
+                  exercise: _exercises[index],
+                  onDelete: () => _removeExercise(_exercises[index].id),
                 ),
               ),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _incrementWorkout,
-              icon: Icon(Icons.check),
-              label: Text('Marcar Treino'),
-            ),
-          ],
-        ),
-      ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  /// FAB com animacao de pulse
+  Widget _buildAnimatedFAB() {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: 1 + (_pulseController.value * 0.08),
+          child: FloatingActionButton.extended(
+            onPressed: _addNewExercise,
+            icon: Icon(Icons.add),
+            label: Text('Novo Exercicio'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      },
     );
   }
 }
