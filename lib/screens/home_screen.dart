@@ -1,6 +1,8 @@
-import 'package:fittracker/widgets/excercise_card.dart';
+import 'package:fittracker/constants/app_constants.dart';
+import 'package:fittracker/models/exercise.dart';
+import 'package:fittracker/utils/format_utils.dart';
+import 'package:fittracker/widgets/exercise_card.dart';
 import 'package:flutter/material.dart';
-import '../../models/exercise.dart';
 
 /// HomeScreen com animacoes
 /// Demonstra: AnimationController, Staggered Animations, Tween, Curves
@@ -68,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   ];
 
   int _workoutsThisWeek = 0;
-  final int _weeklyGoal = 5;
+  final int _weeklyGoal = AppConstants.weeklyGoalWorkouts;
 
   @override
   void initState() {
@@ -76,19 +78,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     // Controller para lista staggered (1.5s total)
     _listController = AnimationController(
-      duration: Duration(milliseconds: 1500),
+      duration: Duration(milliseconds: AppConstants.listAnimationDurationMs),
       vsync: this,
     );
 
     // Controller para progresso (1s)
     _progressController = AnimationController(
-      duration: Duration(milliseconds: 1000),
+      duration: Duration(milliseconds: AppConstants.progressAnimationDurationMs),
       vsync: this,
     );
 
     // Controller para pulse do FAB (loop)
     _pulseController = AnimationController(
-      duration: Duration(milliseconds: 1500),
+      duration: Duration(milliseconds: AppConstants.pulseAnimationDurationMs),
       vsync: this,
     )..repeat(reverse: true);
 
@@ -113,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _addNewExercise() async {
-    final result = await Navigator.pushNamed(context, '/exercise/new');
+    final result = await Navigator.pushNamed(context, AppConstants.routeNewExercise);
 
     if (result != null && result is Exercise) {
       setState(() {
@@ -184,18 +186,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Color _getProgressColor(double progress) {
-    if (progress < 0.3) return Colors.red;
-    if (progress < 0.7) return Colors.orange;
-    return Colors.green;
+    return FormatUtils.getProgressColor(progress);
   }
 
   @override
   Widget build(BuildContext context) {
-    // final settings = AppSettings.of(context);
-
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
           // AppBar animada
           SliverAppBar(
             expandedHeight: 200,
@@ -219,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Icon(
                       Icons.fitness_center,
                       size: 80,
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
                   ),
                 ),
@@ -233,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               IconButton(
                 icon: Icon(Icons.timer),
-                onPressed: () => Navigator.pushNamed(context, '/timer'),
+                onPressed: () => Navigator.pushNamed(context, AppConstants.routeTimer),
                 tooltip: 'Timer',
               ),
               IconButton(
@@ -277,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withOpacity(0.2),
+                            color: Colors.orange.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -332,6 +331,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
       ),
       floatingActionButton: _buildAnimatedFAB(),
     );

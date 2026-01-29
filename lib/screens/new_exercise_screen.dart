@@ -1,7 +1,6 @@
+import 'package:fittracker/constants/app_constants.dart';
+import 'package:fittracker/models/exercise.dart';
 import 'package:flutter/material.dart';
-
-// import '../../core/settings/app_settings.dart';
-import '../../models/exercise.dart';
 
 class NewExerciseScreen extends StatefulWidget {
   const NewExerciseScreen({super.key});
@@ -18,17 +17,6 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
   final _weightController = TextEditingController();
 
   String? _selectedCategory;
-
-  final List<String> _categories = [
-    'Peito',
-    'Costas',
-    'Pernas',
-    'Ombros',
-    'Bíceps',
-    'Tríceps',
-    'Abdômen',
-    'Cardio',
-  ];
 
   @override
   void dispose() {
@@ -81,9 +69,10 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Form(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Form(
           key: _formKey,
           autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
@@ -104,8 +93,9 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Por favor, insira o nome do exercício';
                   }
-                  if (value.trim().length < 3) {
-                    return 'Nome deve ter pelo menos 3 caracteres';
+                  if (value.trim().length <
+                      AppConstants.minExerciseNameLength) {
+                    return 'Nome deve ter pelo menos ${AppConstants.minExerciseNameLength} caracteres';
                   }
                   return null;
                 },
@@ -131,8 +121,9 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
                         if (number == null) {
                           return 'Número inválido';
                         }
-                        if (number < 1 || number > 20) {
-                          return 'Entre 1 e 20';
+                        if (number < AppConstants.minSets ||
+                            number > AppConstants.maxSets) {
+                          return 'Entre ${AppConstants.minSets} e ${AppConstants.maxSets}';
                         }
                         return null;
                       },
@@ -157,8 +148,9 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
                         if (number == null) {
                           return 'Número inválido';
                         }
-                        if (number < 1 || number > 100) {
-                          return 'Entre 1 e 100';
+                        if (number < AppConstants.minReps ||
+                            number > AppConstants.maxReps) {
+                          return 'Entre ${AppConstants.minReps} e ${AppConstants.maxReps}';
                         }
                         return null;
                       },
@@ -182,8 +174,9 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
                     if (number == null) {
                       return 'Número inválido';
                     }
-                    if (number < 0 || number > 500) {
-                      return 'Peso deve estar entre 0 e 500';
+                    if (number < AppConstants.minWeight ||
+                        number > AppConstants.maxWeight) {
+                      return 'Peso deve estar entre ${AppConstants.minWeight} e ${AppConstants.maxWeight}';
                     }
                   }
                   return null;
@@ -191,13 +184,13 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
               ),
               SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: InputDecoration(
                   labelText: 'Categoria',
                   prefixIcon: Icon(Icons.category),
                   border: OutlineInputBorder(),
                 ),
-                items: _categories.map((category) {
+                items: AppConstants.exerciseCategories.map((category) {
                   return DropdownMenuItem(
                     value: category,
                     child: Text(category),
@@ -235,6 +228,7 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

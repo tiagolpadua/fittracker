@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:fittracker/constants/app_constants.dart';
+import 'package:fittracker/utils/format_utils.dart';
 import 'package:flutter/material.dart';
 
 class TimerScreen extends StatefulWidget {
@@ -13,22 +15,9 @@ class _TimerScreenState extends State<TimerScreen> {
   int _remainingSeconds = 60;
   int _selectedSeconds = 60;
   Timer? _timer;
-
-  final List<int> _presets = [30, 60, 90, 120];
-
-  String _formatPreset(int seconds) {
-    if (seconds >= 60) {
-      int mins = seconds ~/ 60;
-      int secs = seconds % 60;
-      return secs > 0 ? '${mins}m${secs}s' : '${mins}min';
-    }
-    return '${seconds}s';
-  }
-
   bool _isRunning = false;
 
   void _selectPreset(int seconds) {
-    print('Selected preset: $seconds seconds');
     _timer?.cancel();
     setState(() {
       _selectedSeconds = seconds;
@@ -43,9 +32,7 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 
   String _formatTime(int seconds) {
-    int mins = seconds ~/ 60;
-    int secs = seconds % 60;
-    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    return FormatUtils.formatTime(seconds);
   }
 
   void _startTimer() {
@@ -54,7 +41,6 @@ class _TimerScreenState extends State<TimerScreen> {
     });
 
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      print('Timer tick: $_remainingSeconds seconds remaining');
       if (!mounted) {
         timer.cancel();
         return;
@@ -103,7 +89,6 @@ class _TimerScreenState extends State<TimerScreen> {
 
   @override
   void dispose() {
-    debugPrint('TimerScreen: dispose()');
     _timer?.cancel();
     super.dispose();
   }
@@ -126,10 +111,10 @@ class _TimerScreenState extends State<TimerScreen> {
                 SizedBox(height: 12),
                 Wrap(
                   spacing: 12,
-                  children: _presets.map((seconds) {
+                  children: AppConstants.timerPresets.map((seconds) {
                     bool isSelected = _selectedSeconds == seconds;
                     return ChoiceChip(
-                      label: Text(_formatPreset(seconds)),
+                      label: Text(FormatUtils.formatPreset(seconds)),
                       selected: isSelected,
                       selectedColor: Colors.orange,
                       onSelected: _isRunning
@@ -208,65 +193,6 @@ class _TimerScreenState extends State<TimerScreen> {
                     ),
                   ],
                 ),
-                // SizedBox(height: 40),
-                // if (_history.isNotEmpty) ...[
-                //   Row(
-                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //     children: [
-                //       Text(
-                //         'Histórico de Descansos',
-                //         style: TextStyle(
-                //           fontSize: 16,
-                //           fontWeight: FontWeight.bold,
-                //         ),
-                //       ),
-                //       TextButton(
-                //         onPressed: _clearHistory,
-                //         child: Text('Limpar'),
-                //       ),
-                //     ],
-                //   ),
-                //   SizedBox(height: 8),
-                //   SizedBox(
-                //     height: 80,
-                //     child: ListView.builder(
-                //       scrollDirection: Axis.horizontal,
-                //       itemCount: _history.length,
-                //       itemBuilder: (context, index) {
-                //         final record = _history[_history.length - 1 - index];
-                //         return Container(
-                //           margin: EdgeInsets.only(right: 12),
-                //           padding: EdgeInsets.all(12),
-                //           decoration: BoxDecoration(
-                //             color: Colors.orange[50],
-                //             borderRadius: BorderRadius.circular(12),
-                //             border: Border.all(color: Colors.orange[200]!),
-                //           ),
-                //           child: Column(
-                //             mainAxisAlignment: MainAxisAlignment.center,
-                //             children: [
-                //               Text(
-                //                 _formatPreset(record.seconds),
-                //                 style: TextStyle(
-                //                   fontWeight: FontWeight.bold,
-                //                   color: Colors.orange[800],
-                //                 ),
-                //               ),
-                //               SizedBox(height: 4),
-                //               Text(
-                //                 '${record.time.hour}:${record.time.minute.toString().padLeft(2, '0')}',
-                //                 style: TextStyle(
-                //                   fontSize: 12,
-                //                   color: Colors.grey[600],
-                //                 ),
-                //               ),
-                //             ],
-                //           ),
-                //         );
-                //       },
-                //     ),
-                //   ),
-                // ],
               ],
             ),
           ),

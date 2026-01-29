@@ -1,3 +1,5 @@
+import 'package:fittracker/config/app_theme.dart';
+import 'package:fittracker/constants/app_constants.dart';
 import 'package:fittracker/screens/home_screen.dart';
 import 'package:fittracker/screens/new_exercise_screen.dart';
 import 'package:fittracker/screens/timer_screen.dart';
@@ -15,15 +17,14 @@ class FitTrackerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FitTracker',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-        brightness: Brightness.light,
-      ),
-      initialRoute: '/',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.light,
+      initialRoute: AppConstants.routeHome,
       routes: {
-        '/': (context) => HomeScreen(),
-        '/exercise/new': (context) => NewExerciseScreen(),
-        '/timer': (context) => TimerScreen(),
+        AppConstants.routeHome: (context) => const HomeScreen(),
+        AppConstants.routeNewExercise: (context) => const NewExerciseScreen(),
+        AppConstants.routeTimer: (context) => const TimerScreen(),
       },
     );
   }

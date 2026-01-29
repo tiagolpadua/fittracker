@@ -1,6 +1,6 @@
+import 'package:fittracker/models/exercise.dart';
+import 'package:fittracker/utils/format_utils.dart';
 import 'package:flutter/material.dart';
-
-import '../models/exercise.dart';
 
 /// ExerciseCard com animacoes implicitas
 /// Demonstra: AnimatedContainer, AnimatedOpacity, AnimatedSwitcher
@@ -24,29 +24,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
   bool _isCompleted = false;
 
   Color _getCategoryColor() {
-    switch (widget.exercise.category.toLowerCase()) {
-      case 'peito':
-        return Colors.red;
-      case 'costas':
-        return Colors.blue;
-      case 'pernas':
-        return Colors.green;
-      case 'ombros':
-        return Colors.purple;
-      case 'biceps':
-      case 'bíceps':
-        return Colors.orange;
-      case 'triceps':
-      case 'tríceps':
-        return Colors.teal;
-      case 'abdomen':
-      case 'abdômen':
-        return Colors.indigo;
-      case 'cardio':
-        return Colors.pink;
-      default:
-        return Colors.grey;
-    }
+    return FormatUtils.getCategoryColor(widget.exercise.category);
   }
 
   @override
@@ -66,26 +44,27 @@ class _ExerciseCardState extends State<ExerciseCard> {
           onTap: () {
             setState(() => _isCompleted = !_isCompleted);
           },
-          child: AnimatedContainer(
+          child: Transform.scale(
+            scale: _isPressed ? 0.98 : 1.0,
+            child: AnimatedContainer(
             duration: Duration(milliseconds: 200),
             curve: Curves.easeOut,
-            transform: Matrix4.identity()..scale(_isPressed ? 0.98 : 1.0),
             decoration: BoxDecoration(
               color: _isCompleted
-                  ? Colors.green.withOpacity(0.1)
+                  ? Colors.green.withValues(alpha: 0.1)
                   : (_isHovered ? Colors.grey[50] : Colors.white),
               borderRadius: BorderRadius.circular(_isHovered ? 16 : 12),
               border: Border.all(
                 color: _isCompleted
                     ? Colors.green
                     : (_isHovered
-                          ? categoryColor.withOpacity(0.5)
+                          ? categoryColor.withValues(alpha: 0.5)
                           : Colors.grey[200]!),
                 width: _isCompleted ? 2 : 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(_isHovered ? 0.1 : 0.05),
+                  color: Colors.black.withValues(alpha: _isHovered ? 0.1 : 0.05),
                   blurRadius: _isHovered ? 12 : 4,
                   offset: Offset(0, _isHovered ? 6 : 2),
                 ),
@@ -102,8 +81,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
                     height: _isHovered ? 55 : 50,
                     decoration: BoxDecoration(
                       color: _isCompleted
-                          ? Colors.green.withOpacity(0.2)
-                          : categoryColor.withOpacity(0.2),
+                          ? Colors.green.withValues(alpha: 0.2)
+                          : categoryColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(_isHovered ? 16 : 12),
                     ),
                     child: AnimatedSwitcher(
@@ -233,6 +212,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
               ),
             ),
           ),
+            ),
         ),
       ),
     );
