@@ -9,11 +9,15 @@ import 'package:provider/provider.dart';
 class ExerciseCard extends StatefulWidget {
   final Exercise exercise;
   final VoidCallback onDelete;
+  final VoidCallback? onToggleCompleted;
+  final bool isCompleted;
 
   const ExerciseCard({
     super.key,
     required this.exercise,
     required this.onDelete,
+    this.onToggleCompleted,
+    this.isCompleted = false,
   });
 
   @override
@@ -23,7 +27,6 @@ class ExerciseCard extends StatefulWidget {
 class _ExerciseCardState extends State<ExerciseCard> {
   bool _isHovered = false;
   bool _isPressed = false;
-  bool _isCompleted = false;
 
   Color _getCategoryColor() {
     return FormatUtils.getCategoryColor(widget.exercise.category);
@@ -44,7 +47,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
           onTapUp: (_) => setState(() => _isPressed = false),
           onTapCancel: () => setState(() => _isPressed = false),
           onTap: () {
-            setState(() => _isCompleted = !_isCompleted);
+            widget.onToggleCompleted?.call();
           },
           child: Transform.scale(
             scale: _isPressed ? 0.98 : 1.0,
@@ -52,17 +55,17 @@ class _ExerciseCardState extends State<ExerciseCard> {
               duration: Duration(milliseconds: 200),
               curve: Curves.easeOut,
               decoration: BoxDecoration(
-                color: _isCompleted
+                color: widget.isCompleted
                     ? Colors.green.withValues(alpha: 0.1)
                     : (_isHovered ? Colors.grey[50] : Colors.white),
                 borderRadius: BorderRadius.circular(_isHovered ? 16 : 12),
                 border: Border.all(
-                  color: _isCompleted
+                  color: widget.isCompleted
                       ? Colors.green
                       : (_isHovered
                             ? categoryColor.withValues(alpha: 0.5)
                             : Colors.grey[200]!),
-                  width: _isCompleted ? 2 : 1,
+                  width: widget.isCompleted ? 2 : 1,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -84,7 +87,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
                       width: _isHovered ? 55 : 50,
                       height: _isHovered ? 55 : 50,
                       decoration: BoxDecoration(
-                        color: _isCompleted
+                        color: widget.isCompleted
                             ? Colors.green.withValues(alpha: 0.2)
                             : categoryColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(
@@ -100,9 +103,13 @@ class _ExerciseCardState extends State<ExerciseCard> {
                           );
                         },
                         child: Icon(
-                          _isCompleted ? Icons.check : Icons.fitness_center,
-                          key: ValueKey(_isCompleted),
-                          color: _isCompleted ? Colors.green : categoryColor,
+                          widget.isCompleted
+                              ? Icons.check
+                              : Icons.fitness_center,
+                          key: ValueKey(widget.isCompleted),
+                          color: widget.isCompleted
+                              ? Colors.green
+                              : categoryColor,
                           size: _isHovered ? 28 : 24,
                         ),
                       ),
@@ -120,10 +127,10 @@ class _ExerciseCardState extends State<ExerciseCard> {
                             style: TextStyle(
                               fontSize: _isHovered ? 17 : 16,
                               fontWeight: FontWeight.bold,
-                              color: _isCompleted
+                              color: widget.isCompleted
                                   ? Colors.green[700]
                                   : Colors.black87,
-                              decoration: _isCompleted
+                              decoration: widget.isCompleted
                                   ? TextDecoration.lineThrough
                                   : TextDecoration.none,
                             ),
@@ -132,7 +139,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
                           SizedBox(height: 4),
                           AnimatedOpacity(
                             duration: Duration(milliseconds: 200),
-                            opacity: _isCompleted ? 0.5 : 1,
+                            opacity: widget.isCompleted ? 0.5 : 1,
                             child: Text(
                               widget.exercise.category,
                               style: TextStyle(
@@ -144,7 +151,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
                           if (widget.exercise.weight != null)
                             AnimatedOpacity(
                               duration: Duration(milliseconds: 200),
-                              opacity: _isCompleted ? 0.5 : 1,
+                              opacity: widget.isCompleted ? 0.5 : 1,
                               child: Text(
                                 '${widget.exercise.weight} ${settings.measurementUnit}',
                                 style: TextStyle(
@@ -165,7 +172,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
                         vertical: _isHovered ? 8 : 6,
                       ),
                       decoration: BoxDecoration(
-                        color: _isCompleted
+                        color: widget.isCompleted
                             ? Colors.green[50]
                             : Colors.grey[100],
                         borderRadius: BorderRadius.circular(8),
@@ -174,7 +181,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
                         '${widget.exercise.sets}x${widget.exercise.reps}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: _isCompleted
+                          color: widget.isCompleted
                               ? Colors.green[700]
                               : Colors.grey[700],
                         ),

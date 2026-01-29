@@ -71,6 +71,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ),
   ];
 
+  // Rastrear exercicios completados
+  final Set<String> _completedExercises = {};
+
   int _workoutsThisWeek = 0;
   final int _weeklyGoal = AppConstants.weeklyGoalWorkouts;
 
@@ -148,6 +151,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _removeExercise(String id) {
     setState(() {
       _exercises.removeWhere((e) => e.id == id);
+      _completedExercises.remove(id);
+    });
+  }
+
+  void _toggleCompleted(String id) {
+    setState(() {
+      if (_completedExercises.contains(id)) {
+        _completedExercises.remove(id);
+      } else {
+        _completedExercises.add(id);
+      }
     });
   }
 
@@ -337,35 +351,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     AnimatedOpacity(
                       duration: Duration(milliseconds: 500),
                       opacity: _showContent ? 1 : 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Treino de Hoje',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          AnimatedContainer(
-                            duration: Duration(milliseconds: 300),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '${_exercises.length} exercicios',
-                              style: TextStyle(
-                                color: Colors.orange[800],
-                                fontWeight: FontWeight.w500,
+                      child: Consumer<SettingsProvider>(
+                        builder: (context, settings, child) {
+                          final displayCount = settings.showCompletedExercises
+                              ? _exercises.length
+                              : _exercises.length - _completedExercises.length;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Treino de Hoje',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ),
-                        ],
+                              AnimatedContainer(
+                                duration: Duration(milliseconds: 300),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  '$displayCount exercicios',
+                                  style: TextStyle(
+                                    color: Colors.orange[800],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
 
@@ -375,35 +396,49 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     _buildStaggeredList(),
 
                     // Mensagem se lista vazia
-                    if (_exercises.isEmpty)
-                      AnimatedOpacity(
-                        duration: Duration(milliseconds: 500),
-                        opacity: _showContent ? 1 : 0,
-                        child: Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(32),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.fitness_center,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                SizedBox(height: 16),
-                                Text(
-                                  'Nenhum exercicio cadastrado',
-                                  style: TextStyle(color: Colors.grey[600]),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Toque no botao + para adicionar',
-                                  style: TextStyle(color: Colors.grey[400]),
-                                ),
-                              ],
+                    Consumer<SettingsProvider>(
+                      builder: (context, settings, child) {
+                        final isEmpty =
+                            _exercises.isEmpty ||
+                            (!settings.showCompletedExercises &&
+                                _exercises.length ==
+                                    _completedExercises.length);
+                        if (!isEmpty) return SizedBox.shrink();
+
+                        return AnimatedOpacity(
+                          duration: Duration(milliseconds: 500),
+                          opacity: _showContent ? 1 : 0,
+                          child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.fitness_center,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    _exercises.isEmpty
+                                        ? 'Nenhum exercicio cadastrado'
+                                        : 'Todos os exercicios foram completados!',
+                                    style: TextStyle(color: Colors.grey[600]),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    _exercises.isEmpty
+                                        ? 'Toque no botao + para adicionar'
+                                        : 'Desabilite a opcao para ver exercicios completos',
+                                    style: TextStyle(color: Colors.grey[400]),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -551,48 +586,68 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   /// Lista com staggered animation (cada item aparece em sequencia)
   Widget _buildStaggeredList() {
-    return AnimatedBuilder(
-      animation: _listController,
-      builder: (context, child) {
-        return Column(
-          children: List.generate(_exercises.length, (index) {
-            // Calcular intervalo para cada item (escalonado)
-            final startInterval = index * 0.1;
-            final endInterval = (startInterval + 0.4).clamp(0.0, 1.0);
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        // Filtrar exercicios baseado na configuracao
+        final filteredExercises = _exercises.where((exercise) {
+          if (!settings.showCompletedExercises) {
+            return !_completedExercises.contains(exercise.id);
+          }
+          return true;
+        }).toList();
 
-            // Animacao de slide da direita
-            final slideAnimation =
-                Tween<Offset>(begin: Offset(1, 0), end: Offset.zero).animate(
+        return AnimatedBuilder(
+          animation: _listController,
+          builder: (context, child) {
+            return Column(
+              children: List.generate(filteredExercises.length, (index) {
+                // Calcular intervalo para cada item (escalonado)
+                final startInterval = index * 0.1;
+                final endInterval = (startInterval + 0.4).clamp(0.0, 1.0);
+
+                // Animacao de slide da direita
+                final slideAnimation =
+                    Tween<Offset>(
+                      begin: Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _listController,
+                        curve: Interval(
+                          startInterval,
+                          endInterval,
+                          curve: Curves.easeOut,
+                        ),
+                      ),
+                    );
+
+                // Animacao de fade
+                final fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
                   CurvedAnimation(
                     parent: _listController,
-                    curve: Interval(
-                      startInterval,
-                      endInterval,
-                      curve: Curves.easeOut,
-                    ),
+                    curve: Interval(startInterval, endInterval),
                   ),
                 );
 
-            // Animacao de fade
-            final fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-              CurvedAnimation(
-                parent: _listController,
-                curve: Interval(startInterval, endInterval),
-              ),
-            );
+                final exercise = filteredExercises[index];
+                final isCompleted = _completedExercises.contains(exercise.id);
 
-            return SlideTransition(
-              position: slideAnimation,
-              child: FadeTransition(
-                opacity: fadeAnimation,
-                child: ExerciseCard(
-                  key: ValueKey(_exercises[index].id),
-                  exercise: _exercises[index],
-                  onDelete: () => _removeExercise(_exercises[index].id),
-                ),
-              ),
+                return SlideTransition(
+                  position: slideAnimation,
+                  child: FadeTransition(
+                    opacity: fadeAnimation,
+                    child: ExerciseCard(
+                      key: ValueKey(exercise.id),
+                      exercise: exercise,
+                      isCompleted: isCompleted,
+                      onDelete: () => _removeExercise(exercise.id),
+                      onToggleCompleted: () => _toggleCompleted(exercise.id),
+                    ),
+                  ),
+                );
+              }),
             );
-          }),
+          },
         );
       },
     );
