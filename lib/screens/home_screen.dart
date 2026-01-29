@@ -1,8 +1,10 @@
+import 'package:fittracker/config/settings_provider.dart';
 import 'package:fittracker/constants/app_constants.dart';
 import 'package:fittracker/models/exercise.dart';
 import 'package:fittracker/utils/format_utils.dart';
 import 'package:fittracker/widgets/exercise_card.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 /// HomeScreen com animacoes
 /// Demonstra: AnimationController, Staggered Animations, Tween, Curves
@@ -185,6 +187,71 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _listController.forward();
   }
 
+  void _showSettingsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Consumer<SettingsProvider>(
+        builder: (context, settings, child) {
+          return ListView(
+            shrinkWrap: true,
+            children: [
+              ListTile(
+                title: Text(
+                  'Configuracoes',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              Divider(),
+              SwitchListTile(
+                title: Text('Tema escuro'),
+                subtitle: Text('Alterna entre claro e escuro'),
+                value: settings.isDark,
+                onChanged: (_) => settings.toggleTheme(),
+                secondary: Icon(
+                  settings.isDark ? Icons.dark_mode : Icons.light_mode,
+                ),
+              ),
+              SwitchListTile(
+                title: Text('Mostrar exercicios completos'),
+                subtitle: Text('Exibe exercicios ja realizados'),
+                value: settings.showCompletedExercises,
+                onChanged: (_) => settings.toggleShowCompleted(),
+                secondary: Icon(Icons.visibility),
+              ),
+              ListTile(
+                leading: Icon(Icons.straighten),
+                title: Text('Unidade de medida'),
+                subtitle: Text(settings.measurementUnit),
+                trailing: DropdownButton<String>(
+                  value: settings.measurementUnit,
+                  items: ['kg', 'lb'].map((unit) {
+                    return DropdownMenuItem(
+                      value: unit,
+                      child: Text(unit),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      settings.setMeasurementUnit(value);
+                    }
+                  },
+                ),
+              ),
+              SizedBox(height: 16),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   Color _getProgressColor(double progress) {
     return FormatUtils.getProgressColor(progress);
   }
@@ -235,9 +302,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 onPressed: () => Navigator.pushNamed(context, AppConstants.routeTimer),
                 tooltip: 'Timer',
               ),
+              Selector<SettingsProvider, bool>(
+                selector: (_, settings) => settings.isDark,
+                builder: (context, isDark, child) {
+                  return IconButton(
+                    icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                    onPressed: () =>
+                        context.read<SettingsProvider>().toggleTheme(),
+                    tooltip: 'Alternar tema',
+                  );
+                },
+              ),
               IconButton(
                 icon: Icon(Icons.settings),
-                onPressed: () => Navigator.pushNamed(context, '/settings'),
+                onPressed: () => _showSettingsSheet(context),
                 tooltip: 'Configuracoes',
               ),
             ],
