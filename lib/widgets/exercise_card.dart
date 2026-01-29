@@ -1,6 +1,8 @@
+import 'package:fittracker/config/settings_provider.dart';
 import 'package:fittracker/models/exercise.dart';
 import 'package:fittracker/utils/format_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 /// ExerciseCard com animacoes implicitas
 /// Demonstra: AnimatedContainer, AnimatedOpacity, AnimatedSwitcher
@@ -29,7 +31,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
 
   @override
   Widget build(BuildContext context) {
-    // final settings = AppSettings.of(context);
+    final settings = Provider.of<SettingsProvider>(context);
     final categoryColor = _getCategoryColor();
 
     return Padding(
@@ -47,172 +49,181 @@ class _ExerciseCardState extends State<ExerciseCard> {
           child: Transform.scale(
             scale: _isPressed ? 0.98 : 1.0,
             child: AnimatedContainer(
-            duration: Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-            decoration: BoxDecoration(
-              color: _isCompleted
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : (_isHovered ? Colors.grey[50] : Colors.white),
-              borderRadius: BorderRadius.circular(_isHovered ? 16 : 12),
-              border: Border.all(
+              duration: Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              decoration: BoxDecoration(
                 color: _isCompleted
-                    ? Colors.green
-                    : (_isHovered
-                          ? categoryColor.withValues(alpha: 0.5)
-                          : Colors.grey[200]!),
-                width: _isCompleted ? 2 : 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: _isHovered ? 0.1 : 0.05),
-                  blurRadius: _isHovered ? 12 : 4,
-                  offset: Offset(0, _isHovered ? 6 : 2),
+                    ? Colors.green.withValues(alpha: 0.1)
+                    : (_isHovered ? Colors.grey[50] : Colors.white),
+                borderRadius: BorderRadius.circular(_isHovered ? 16 : 12),
+                border: Border.all(
+                  color: _isCompleted
+                      ? Colors.green
+                      : (_isHovered
+                            ? categoryColor.withValues(alpha: 0.5)
+                            : Colors.grey[200]!),
+                  width: _isCompleted ? 2 : 1,
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  // Icone com animacao
-                  AnimatedContainer(
-                    duration: Duration(milliseconds: 200),
-                    width: _isHovered ? 55 : 50,
-                    height: _isHovered ? 55 : 50,
-                    decoration: BoxDecoration(
-                      color: _isCompleted
-                          ? Colors.green.withValues(alpha: 0.2)
-                          : categoryColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(_isHovered ? 16 : 12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: _isHovered ? 0.1 : 0.05,
                     ),
-                    child: AnimatedSwitcher(
-                      duration: Duration(milliseconds: 300),
-                      transitionBuilder: (child, animation) {
-                        return ScaleTransition(scale: animation, child: child);
-                      },
-                      child: Icon(
-                        _isCompleted ? Icons.check : Icons.fitness_center,
-                        key: ValueKey(_isCompleted),
-                        color: _isCompleted ? Colors.green : categoryColor,
-                        size: _isHovered ? 28 : 24,
+                    blurRadius: _isHovered ? 12 : 4,
+                    offset: Offset(0, _isHovered ? 6 : 2),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Icone com animacao
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      width: _isHovered ? 55 : 50,
+                      height: _isHovered ? 55 : 50,
+                      decoration: BoxDecoration(
+                        color: _isCompleted
+                            ? Colors.green.withValues(alpha: 0.2)
+                            : categoryColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(
+                          _isHovered ? 16 : 12,
+                        ),
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: 300),
+                        transitionBuilder: (child, animation) {
+                          return ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          );
+                        },
+                        child: Icon(
+                          _isCompleted ? Icons.check : Icons.fitness_center,
+                          key: ValueKey(_isCompleted),
+                          color: _isCompleted ? Colors.green : categoryColor,
+                          size: _isHovered ? 28 : 24,
+                        ),
                       ),
                     ),
-                  ),
 
-                  SizedBox(width: 16),
+                    SizedBox(width: 16),
 
-                  // Informacoes
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AnimatedDefaultTextStyle(
-                          duration: Duration(milliseconds: 200),
-                          style: TextStyle(
-                            fontSize: _isHovered ? 17 : 16,
-                            fontWeight: FontWeight.bold,
-                            color: _isCompleted
-                                ? Colors.green[700]
-                                : Colors.black87,
-                            decoration: _isCompleted
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
-                          ),
-                          child: Text(widget.exercise.name),
-                        ),
-                        SizedBox(height: 4),
-                        AnimatedOpacity(
-                          duration: Duration(milliseconds: 200),
-                          opacity: _isCompleted ? 0.5 : 1,
-                          child: Text(
-                            widget.exercise.category,
+                    // Informacoes
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AnimatedDefaultTextStyle(
+                            duration: Duration(milliseconds: 200),
                             style: TextStyle(
-                              fontSize: 12,
-                              color: categoryColor,
+                              fontSize: _isHovered ? 17 : 16,
+                              fontWeight: FontWeight.bold,
+                              color: _isCompleted
+                                  ? Colors.green[700]
+                                  : Colors.black87,
+                              decoration: _isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
                             ),
+                            child: Text(widget.exercise.name),
                           ),
-                        ),
-                        if (widget.exercise.weight != null)
+                          SizedBox(height: 4),
                           AnimatedOpacity(
                             duration: Duration(milliseconds: 200),
                             opacity: _isCompleted ? 0.5 : 1,
                             child: Text(
-                              '${widget.exercise.weight} Kg',
+                              widget.exercise.category,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey,
+                                color: categoryColor,
                               ),
                             ),
                           ),
-                      ],
-                    ),
-                  ),
-
-                  // Sets x Reps
-                  AnimatedContainer(
-                    duration: Duration(milliseconds: 200),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: _isHovered ? 14 : 12,
-                      vertical: _isHovered ? 8 : 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _isCompleted ? Colors.green[50] : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${widget.exercise.sets}x${widget.exercise.reps}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: _isCompleted
-                            ? Colors.green[700]
-                            : Colors.grey[700],
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 8),
-
-                  // Botao de remover com fade
-                  AnimatedOpacity(
-                    duration: Duration(milliseconds: 200),
-                    opacity: _isHovered ? 1 : 0.3,
-                    child: IconButton(
-                      icon: Icon(Icons.delete_outline),
-                      color: Colors.red[300],
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: Text('Remover exercicio?'),
-                            content: Text(
-                              'Deseja remover "${widget.exercise.name}" da lista?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(ctx);
-                                  widget.onDelete();
-                                },
-                                child: Text(
-                                  'Remover',
-                                  style: TextStyle(color: Colors.red),
+                          if (widget.exercise.weight != null)
+                            AnimatedOpacity(
+                              duration: Duration(milliseconds: 200),
+                              opacity: _isCompleted ? 0.5 : 1,
+                              child: Text(
+                                '${widget.exercise.weight} ${settings.measurementUnit}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
                                 ),
                               ),
-                            ],
-                          ),
-                        );
-                      },
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+
+                    // Sets x Reps
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: _isHovered ? 14 : 12,
+                        vertical: _isHovered ? 8 : 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _isCompleted
+                            ? Colors.green[50]
+                            : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${widget.exercise.sets}x${widget.exercise.reps}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: _isCompleted
+                              ? Colors.green[700]
+                              : Colors.grey[700],
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(width: 8),
+
+                    // Botao de remover com fade
+                    AnimatedOpacity(
+                      duration: Duration(milliseconds: 200),
+                      opacity: _isHovered ? 1 : 0.3,
+                      child: IconButton(
+                        icon: Icon(Icons.delete_outline),
+                        color: Colors.red[300],
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text('Remover exercicio?'),
+                              content: Text(
+                                'Deseja remover "${widget.exercise.name}" da lista?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: Text('Cancelar'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    widget.onDelete();
+                                  },
+                                  child: Text(
+                                    'Remover',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-            ),
         ),
       ),
     );

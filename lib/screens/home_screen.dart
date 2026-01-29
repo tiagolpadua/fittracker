@@ -86,7 +86,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     // Controller para progresso (1s)
     _progressController = AnimationController(
-      duration: Duration(milliseconds: AppConstants.progressAnimationDurationMs),
+      duration: Duration(
+        milliseconds: AppConstants.progressAnimationDurationMs,
+      ),
       vsync: this,
     );
 
@@ -117,7 +119,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _addNewExercise() async {
-    final result = await Navigator.pushNamed(context, AppConstants.routeNewExercise);
+    final result = await Navigator.pushNamed(
+      context,
+      AppConstants.routeNewExercise,
+    );
 
     if (result != null && result is Exercise) {
       setState(() {
@@ -198,10 +203,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ListTile(
                 title: Text(
                   'Configuracoes',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 trailing: IconButton(
                   icon: Icon(Icons.close),
@@ -232,10 +234,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 trailing: DropdownButton<String>(
                   value: settings.measurementUnit,
                   items: ['kg', 'lb'].map((unit) {
-                    return DropdownMenuItem(
-                      value: unit,
-                      child: Text(unit),
-                    );
+                    return DropdownMenuItem(value: unit, child: Text(unit));
                   }).toList(),
                   onChanged: (value) {
                     if (value != null) {
@@ -262,154 +261,155 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-          // AppBar animada
-          SliverAppBar(
-            expandedHeight: 200,
-            floating: false,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text('FitTracker'),
-              background: AnimatedContainer(
-                duration: Duration(milliseconds: 500),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Colors.orange, Colors.deepOrange],
+            // AppBar animada
+            SliverAppBar(
+              expandedHeight: 200,
+              floating: false,
+              pinned: true,
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text('FitTracker'),
+                background: AnimatedContainer(
+                  duration: Duration(milliseconds: 500),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Colors.orange, Colors.deepOrange],
+                    ),
                   ),
-                ),
-                child: Center(
-                  child: AnimatedOpacity(
-                    duration: Duration(milliseconds: 800),
-                    opacity: _showContent ? 1 : 0,
-                    child: Icon(
-                      Icons.fitness_center,
-                      size: 80,
-                      color: Colors.white.withValues(alpha: 0.3),
+                  child: Center(
+                    child: AnimatedOpacity(
+                      duration: Duration(milliseconds: 800),
+                      opacity: _showContent ? 1 : 0,
+                      child: Icon(
+                        Icons.fitness_center,
+                        size: 80,
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
                     ),
                   ),
                 ),
               ),
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.replay),
+                  onPressed: _replayListAnimation,
+                  tooltip: 'Replay animacao',
+                ),
+                IconButton(
+                  icon: Icon(Icons.timer),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, AppConstants.routeTimer),
+                  tooltip: 'Timer',
+                ),
+                Selector<SettingsProvider, bool>(
+                  selector: (_, settings) => settings.isDark,
+                  builder: (context, isDark, child) {
+                    return IconButton(
+                      icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                      onPressed: () =>
+                          context.read<SettingsProvider>().toggleTheme(),
+                      tooltip: 'Alternar tema',
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.settings),
+                  onPressed: () => _showSettingsSheet(context),
+                  tooltip: 'Configuracoes',
+                ),
+              ],
             ),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.replay),
-                onPressed: _replayListAnimation,
-                tooltip: 'Replay animacao',
-              ),
-              IconButton(
-                icon: Icon(Icons.timer),
-                onPressed: () => Navigator.pushNamed(context, AppConstants.routeTimer),
-                tooltip: 'Timer',
-              ),
-              Selector<SettingsProvider, bool>(
-                selector: (_, settings) => settings.isDark,
-                builder: (context, isDark, child) {
-                  return IconButton(
-                    icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-                    onPressed: () =>
-                        context.read<SettingsProvider>().toggleTheme(),
-                    tooltip: 'Alternar tema',
-                  );
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.settings),
-                onPressed: () => _showSettingsSheet(context),
-                tooltip: 'Configuracoes',
-              ),
-            ],
-          ),
 
-          // Conteudo
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Card de Progresso Animado
-                  _buildProgressCard(),
+            // Conteudo
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Card de Progresso Animado
+                    _buildProgressCard(),
 
-                  SizedBox(height: 24),
+                    SizedBox(height: 24),
 
-                  // Titulo da lista com fade
-                  AnimatedOpacity(
-                    duration: Duration(milliseconds: 500),
-                    opacity: _showContent ? 1 : 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Treino de Hoje',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        AnimatedContainer(
-                          duration: Duration(milliseconds: 300),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '${_exercises.length} exercicios',
-                            style: TextStyle(
-                              color: Colors.orange[800],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: 16),
-
-                  // Lista de exercicios com staggered animation
-                  _buildStaggeredList(),
-
-                  // Mensagem se lista vazia
-                  if (_exercises.isEmpty)
+                    // Titulo da lista com fade
                     AnimatedOpacity(
                       duration: Duration(milliseconds: 500),
                       opacity: _showContent ? 1 : 0,
-                      child: Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(32),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.fitness_center,
-                                size: 64,
-                                color: Colors.grey[400],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Treino de Hoje',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '${_exercises.length} exercicios',
+                              style: TextStyle(
+                                color: Colors.orange[800],
+                                fontWeight: FontWeight.w500,
                               ),
-                              SizedBox(height: 16),
-                              Text(
-                                'Nenhum exercicio cadastrado',
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Toque no botao + para adicionar',
-                                style: TextStyle(color: Colors.grey[400]),
-                              ),
-                            ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 16),
+
+                    // Lista de exercicios com staggered animation
+                    _buildStaggeredList(),
+
+                    // Mensagem se lista vazia
+                    if (_exercises.isEmpty)
+                      AnimatedOpacity(
+                        duration: Duration(milliseconds: 500),
+                        opacity: _showContent ? 1 : 0,
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.fitness_center,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'Nenhum exercicio cadastrado',
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Toque no botao + para adicionar',
+                                  style: TextStyle(color: Colors.grey[400]),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
       floatingActionButton: _buildAnimatedFAB(),
     );
