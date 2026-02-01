@@ -247,12 +247,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Selector<SettingsProvider, bool>(
                   selector: (_, settings) => settings.isDark,
                   builder: (context, isDark, child) {
-                    return IconButton(
-                      icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-                      onPressed: () =>
-                          context.read<SettingsProvider>().toggleTheme(),
-                      tooltip: 'Alternar tema',
-                    );
+                    if (isDark) {
+                      return IconButton(
+                        icon: Icon(Icons.light_mode),
+                        onPressed: () =>
+                            context.read<SettingsProvider>().toggleTheme(),
+                        tooltip: 'Alternar tema',
+                      );
+                    } else {
+                      return IconButton(
+                        icon: Icon(Icons.dark_mode),
+                        onPressed: () =>
+                            context.read<SettingsProvider>().toggleTheme(),
+                        tooltip: 'Alternar tema',
+                      );
+                    }
                   },
                 ),
                 IconButton(
