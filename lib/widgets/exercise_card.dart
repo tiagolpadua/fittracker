@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
 class ExerciseCard extends StatefulWidget {
   final Exercise exercise;
   final VoidCallback onDelete;
+  final VoidCallback? onToggleComplete;
 
   const ExerciseCard({
     super.key,
     required this.exercise,
     required this.onDelete,
+    this.onToggleComplete,
   });
 
   @override
@@ -21,7 +23,9 @@ class ExerciseCard extends StatefulWidget {
 class _ExerciseCardState extends State<ExerciseCard> {
   bool _isHovered = false;
   bool _isPressed = false;
-  bool _isCompleted = false;
+
+  /// Usa o estado do modelo Exercise (vindo da API)
+  bool get _isCompleted => widget.exercise.isCompleted;
 
   Color _getCategoryColor() {
     return FormatUtils.getCategoryColor(widget.exercise.category);
@@ -42,7 +46,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
           onTapUp: (_) => setState(() => _isPressed = false),
           onTapCancel: () => setState(() => _isPressed = false),
           onTap: () {
-            setState(() => _isCompleted = !_isCompleted);
+            widget.onToggleComplete?.call();
           },
           child: Transform.scale(
             scale: _isPressed ? 0.98 : 1.0,

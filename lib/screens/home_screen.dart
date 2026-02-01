@@ -1,13 +1,14 @@
 import 'package:fittracker/config/settings_provider.dart';
 import 'package:fittracker/constants/app_constants.dart';
 import 'package:fittracker/models/exercise.dart';
+import 'package:fittracker/services/exercise_api_service.dart';
 import 'package:fittracker/utils/format_utils.dart';
 import 'package:fittracker/widgets/exercise_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-/// HomeScreen com animacoes
-/// Demonstra: AnimationController, Staggered Animations, Tween, Curves
+/// HomeScreen com animacoes e consumo de API
+/// Demonstra: FutureBuilder, async/await, AnimationController, Staggered Animations
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -27,49 +28,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // Estado de conteudo
   bool _showContent = false;
 
-  // Dados
-  final List<Exercise> _exercises = [
-    Exercise(
-      id: '1',
-      name: 'Supino Reto',
-      sets: 4,
-      reps: 12,
-      category: 'Peito',
-      weight: 60,
-    ),
-    Exercise(
-      id: '2',
-      name: 'Agachamento',
-      sets: 4,
-      reps: 15,
-      category: 'Pernas',
-      weight: 80,
-    ),
-    Exercise(
-      id: '3',
-      name: 'Remada Curvada',
-      sets: 3,
-      reps: 12,
-      category: 'Costas',
-      weight: 50,
-    ),
-    Exercise(
-      id: '4',
-      name: 'Desenvolvimento',
-      sets: 4,
-      reps: 10,
-      category: 'Ombros',
-      weight: 30,
-    ),
-    Exercise(
-      id: '5',
-      name: 'Rosca Direta',
-      sets: 3,
-      reps: 15,
-      category: 'Biceps',
-      weight: 15,
-    ),
-  ];
+  // Servico de API
+  final ExerciseApiService _apiService = ExerciseApiService();
+
+  // Future para FutureBuilder
+  late Future<List<Exercise>> _exercisesFuture;
+
+  // Cache local dos exercicios (para manipulacao apos carregamento)
+  List<Exercise> _exercises = [];
 
   int _workoutsThisWeek = 0;
   final int _weeklyGoal = AppConstants.weeklyGoalWorkouts;
@@ -103,10 +69,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       CurvedAnimation(parent: _progressController, curve: Curves.easeOut),
     );
 
+    // Carregar exercicios da API
+    _loadExercises();
+
     // Iniciar animacoes apos build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() => _showContent = true);
+    });
+  }
+
+  /// Carrega exercicios da API
+  void _loadExercises() {
+    _exercisesFuture = _apiService.getAll().then((exercises) {
+      _exercises = exercises;
+      // Iniciar animacao da lista apos dados carregarem
       _listController.forward();
+      return exercises;
+    });
+  }
+
+  /// Recarrega exercicios (pull-to-refresh)
+  Future<void> _refreshExercises() async {
+    setState(() {
+      _loadExercises();
     });
   }
 
@@ -115,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _listController.dispose();
     _progressController.dispose();
     _pulseController.dispose();
+    _apiService.dispose();
     super.dispose();
   }
 
@@ -125,19 +111,78 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
 
     if (result != null && result is Exercise) {
-      setState(() {
-        _exercises.add(result);
-      });
+      try {
+        // Criar exercicio na API
+        final created = await _apiService.create(result);
+        setState(() {
+          _exercises.add(created);
+        });
 
-      // Replay animacao para mostrar novo item
-      _listController.reset();
-      _listController.forward();
+        // Replay animacao para mostrar novo item
+        _listController.reset();
+        _listController.forward();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${created.name} adicionado!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } on ApiException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao adicionar: ${e.message}'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _removeExercise(Exercise exercise) async {
+    if (exercise.id == null) return;
+
+    try {
+      await _apiService.delete(exercise.id!);
+      setState(() {
+        _exercises.removeWhere((e) => e.id == exercise.id);
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${result.name} adicionado!'),
-            backgroundColor: Colors.green,
+            content: Text('${exercise.name} removido!'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'Desfazer',
+              textColor: Colors.white,
+              onPressed: () async {
+                try {
+                  final restored = await _apiService.create(exercise);
+                  setState(() {
+                    _exercises.add(restored);
+                  });
+                  _listController.reset();
+                  _listController.forward();
+                } catch (_) {}
+              },
+            ),
+          ),
+        );
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao remover: ${e.message}'),
+            backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -145,10 +190,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _removeExercise(String id) {
-    setState(() {
-      _exercises.removeWhere((e) => e.id == id);
-    });
+  Future<void> _toggleComplete(Exercise exercise) async {
+    if (exercise.id == null) return;
+
+    try {
+      final updated = await _apiService.toggleComplete(
+        exercise.id!,
+        !exercise.isCompleted,
+      );
+      setState(() {
+        final index = _exercises.indexWhere((e) => e.id == exercise.id);
+        if (index != -1) {
+          _exercises[index] = updated;
+        }
+      });
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao atualizar: ${e.message}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _incrementWorkout() {
@@ -198,168 +264,139 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    print(">>>>> reconstruindo HomeScreen");
     return Scaffold(
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // AppBar animada
-            SliverAppBar(
-              expandedHeight: 200,
-              floating: false,
-              pinned: true,
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text('FitTracker'),
-                background: AnimatedContainer(
-                  duration: Duration(milliseconds: 500),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Colors.orange, Colors.deepOrange],
+        child: RefreshIndicator(
+          onRefresh: _refreshExercises,
+          child: CustomScrollView(
+            slivers: [
+              // AppBar animada
+              SliverAppBar(
+                expandedHeight: 200,
+                floating: false,
+                pinned: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text('FitTracker'),
+                  background: AnimatedContainer(
+                    duration: Duration(milliseconds: 500),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Colors.orange, Colors.deepOrange],
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: AnimatedOpacity(
-                      duration: Duration(milliseconds: 800),
-                      opacity: _showContent ? 1 : 0,
-                      child: Icon(
-                        Icons.fitness_center,
-                        size: 80,
-                        color: Colors.white.withValues(alpha: 0.3),
+                    child: Center(
+                      child: AnimatedOpacity(
+                        duration: Duration(milliseconds: 800),
+                        opacity: _showContent ? 1 : 0,
+                        child: Icon(
+                          Icons.fitness_center,
+                          size: 80,
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
                       ),
                     ),
                   ),
                 ),
+                actions: [
+                  IconButton(
+                    icon: Icon(Icons.replay),
+                    onPressed: _replayListAnimation,
+                    tooltip: 'Replay animacao',
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.timer),
+                    onPressed: () =>
+                        Navigator.pushNamed(context, AppConstants.routeTimer),
+                    tooltip: 'Timer',
+                  ),
+                  Selector<SettingsProvider, bool>(
+                    selector: (_, settings) => settings.isDark,
+                    builder: (context, isDark, child) {
+                      if (isDark) {
+                        return IconButton(
+                          icon: Icon(Icons.light_mode),
+                          onPressed: () =>
+                              context.read<SettingsProvider>().toggleTheme(),
+                          tooltip: 'Alternar tema',
+                        );
+                      } else {
+                        return IconButton(
+                          icon: Icon(Icons.dark_mode),
+                          onPressed: () =>
+                              context.read<SettingsProvider>().toggleTheme(),
+                          tooltip: 'Alternar tema',
+                        );
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.settings),
+                    onPressed: () => Navigator.pushNamed(context, '/settings'),
+                    tooltip: 'Configuracoes',
+                  ),
+                ],
               ),
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.replay),
-                  onPressed: _replayListAnimation,
-                  tooltip: 'Replay animacao',
-                ),
-                IconButton(
-                  icon: Icon(Icons.timer),
-                  onPressed: () =>
-                      Navigator.pushNamed(context, AppConstants.routeTimer),
-                  tooltip: 'Timer',
-                ),
-                Selector<SettingsProvider, bool>(
-                  selector: (_, settings) => settings.isDark,
-                  builder: (context, isDark, child) {
-                    if (isDark) {
-                      return IconButton(
-                        icon: Icon(Icons.light_mode),
-                        onPressed: () =>
-                            context.read<SettingsProvider>().toggleTheme(),
-                        tooltip: 'Alternar tema',
-                      );
-                    } else {
-                      return IconButton(
-                        icon: Icon(Icons.dark_mode),
-                        onPressed: () =>
-                            context.read<SettingsProvider>().toggleTheme(),
-                        tooltip: 'Alternar tema',
-                      );
-                    }
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.settings),
-                  onPressed: () => Navigator.pushNamed(context, '/settings'),
-                  tooltip: 'Configuracoes',
-                ),
-              ],
-            ),
 
-            // Conteudo
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Card de Progresso Animado
-                    _buildProgressCard(),
+              // Conteudo
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Card de Progresso Animado
+                      _buildProgressCard(),
 
-                    SizedBox(height: 24),
+                      SizedBox(height: 24),
 
-                    // Titulo da lista com fade
-                    AnimatedOpacity(
-                      duration: Duration(milliseconds: 500),
-                      opacity: _showContent ? 1 : 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Treino de Hoje',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          AnimatedContainer(
-                            duration: Duration(milliseconds: 300),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '${_exercises.length} exercicios',
-                              style: TextStyle(
-                                color: Colors.orange[800],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: 16),
-
-                    // Lista de exercicios com staggered animation
-                    _buildStaggeredList(),
-
-                    // Mensagem se lista vazia
-                    if (_exercises.isEmpty)
+                      // Titulo da lista com fade
                       AnimatedOpacity(
                         duration: Duration(milliseconds: 500),
                         opacity: _showContent ? 1 : 0,
-                        child: Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(32),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.fitness_center,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                SizedBox(height: 16),
-                                Text(
-                                  'Nenhum exercicio cadastrado',
-                                  style: TextStyle(color: Colors.grey[600]),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Toque no botao + para adicionar',
-                                  style: TextStyle(color: Colors.grey[400]),
-                                ),
-                              ],
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Treino de Hoje',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '${_exercises.length} exercicios',
+                                style: TextStyle(
+                                  color: Colors.orange[800],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                  ],
+
+                      SizedBox(height: 16),
+
+                      // FutureBuilder para lista de exercicios
+                      _buildExerciseList(),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       floatingActionButton: _buildAnimatedFAB(),
@@ -500,6 +537,101 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  /// FutureBuilder para lista de exercicios com tratamento de estados
+  Widget _buildExerciseList() {
+    return FutureBuilder<List<Exercise>>(
+      future: _exercisesFuture,
+      builder: (context, snapshot) {
+        // Estado: Carregando
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  CircularProgressIndicator(color: Colors.orange),
+                  SizedBox(height: 16),
+                  Text(
+                    'Carregando exercicios...',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Estado: Erro
+        if (snapshot.hasError) {
+          final errorMessage = snapshot.error is ApiException
+              ? (snapshot.error as ApiException).message
+              : 'Erro ao carregar exercicios';
+
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  SizedBox(height: 16),
+                  Text(
+                    errorMessage,
+                    style: TextStyle(color: Colors.red[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: _refreshExercises,
+                    icon: Icon(Icons.refresh),
+                    label: Text('Tentar novamente'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Estado: Sucesso - Lista vazia
+        if (_exercises.isEmpty) {
+          return AnimatedOpacity(
+            duration: Duration(milliseconds: 500),
+            opacity: _showContent ? 1 : 0,
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.fitness_center,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Nenhum exercicio cadastrado',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Toque no botao + para adicionar',
+                      style: TextStyle(color: Colors.grey[400]),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        // Estado: Sucesso - Lista com dados
+        return _buildStaggeredList();
+      },
+    );
+  }
+
   /// Lista com staggered animation (cada item aparece em sequencia)
   Widget _buildStaggeredList() {
     return AnimatedBuilder(
@@ -539,7 +671,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: ExerciseCard(
                   key: ValueKey(_exercises[index].id),
                   exercise: _exercises[index],
-                  onDelete: () => _removeExercise(_exercises[index].id),
+                  onDelete: () => _removeExercise(_exercises[index]),
+                  onToggleComplete: () => _toggleComplete(_exercises[index]),
                 ),
               ),
             );
