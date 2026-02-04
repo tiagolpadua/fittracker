@@ -1,6 +1,7 @@
 import 'package:fittracker/config/settings_provider.dart';
 import 'package:fittracker/constants/app_constants.dart';
 import 'package:fittracker/models/exercise.dart';
+import 'package:fittracker/service/exercice_api_service.dart';
 import 'package:fittracker/utils/format_utils.dart';
 import 'package:fittracker/widgets/exercise_card.dart';
 import 'package:flutter/material.dart';
@@ -25,58 +26,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Animation<double> _progressAnimation;
 
   // Estado de conteudo
-  bool _showContent = false;
+  bool _showContent = true;
 
   // Dados
-  final List<Exercise> _exercises = [
-    Exercise(
-      id: '1',
-      name: 'Supino Reto',
-      sets: 4,
-      reps: 12,
-      category: 'Peito',
-      weight: 60,
-    ),
-    Exercise(
-      id: '2',
-      name: 'Agachamento',
-      sets: 4,
-      reps: 15,
-      category: 'Pernas',
-      weight: 80,
-    ),
-    Exercise(
-      id: '3',
-      name: 'Remada Curvada',
-      sets: 3,
-      reps: 12,
-      category: 'Costas',
-      weight: 50,
-    ),
-    Exercise(
-      id: '4',
-      name: 'Desenvolvimento',
-      sets: 4,
-      reps: 10,
-      category: 'Ombros',
-      weight: 30,
-    ),
-    Exercise(
-      id: '5',
-      name: 'Rosca Direta',
-      sets: 3,
-      reps: 15,
-      category: 'Biceps',
-      weight: 15,
-    ),
-  ];
+  List<Exercise> _exercises = [];
 
   int _workoutsThisWeek = 0;
   final int _weeklyGoal = AppConstants.weeklyGoalWorkouts;
+  late Future<List<Exercise>> _exercisesFuture;
+  final _apiService = ExerciseApiService();
 
   @override
   void initState() {
     super.initState();
+
+    // final exerciseApiService = ExerciseApiService();
+
+    // exerciseApiService.getAll().then((fetchedExercises) {
+    //   print('Exercicios buscados: $fetchedExercises');
+    //   setState(() {
+    //     _exercises = fetchedExercises;
+    //   });
+    // });
+
+    _loadExercises();
 
     // Controller para lista staggered (1.5s total)
     _listController = AnimationController(
@@ -104,10 +77,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
 
     // Iniciar animacoes apos build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() => _showContent = true);
-      _listController.forward();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   setState(() => _showContent = true);
+    //   _listController.forward();
+    // });
   }
 
   @override
@@ -323,38 +296,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     SizedBox(height: 16),
 
                     // Lista de exercicios com staggered animation
-                    _buildStaggeredList(),
+                    _buildExerciseList(),
 
                     // Mensagem se lista vazia
-                    if (_exercises.isEmpty)
-                      AnimatedOpacity(
-                        duration: Duration(milliseconds: 500),
-                        opacity: _showContent ? 1 : 0,
-                        child: Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(32),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.fitness_center,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                SizedBox(height: 16),
-                                Text(
-                                  'Nenhum exercicio cadastrado',
-                                  style: TextStyle(color: Colors.grey[600]),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Toque no botao + para adicionar',
-                                  style: TextStyle(color: Colors.grey[400]),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                    // if (_exercises.isEmpty)
+                    //   AnimatedOpacity(
+                    //     duration: Duration(milliseconds: 500),
+                    //     opacity: _showContent ? 1 : 0,
+                    //     child: Center(
+                    //       child: Padding(
+                    //         padding: EdgeInsets.all(32),
+                    //         child: Column(
+                    //           children: [
+                    //             Icon(
+                    //               Icons.fitness_center,
+                    //               size: 64,
+                    //               color: Colors.grey[400],
+                    //             ),
+                    //             SizedBox(height: 16),
+                    //             Text(
+                    //               'Nenhum exercicio cadastrado',
+                    //               style: TextStyle(color: Colors.grey[600]),
+                    //             ),
+                    //             SizedBox(height: 8),
+                    //             Text(
+                    //               'Toque no botao + para adicionar',
+                    //               style: TextStyle(color: Colors.grey[400]),
+                    //             ),
+                    //           ],
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ),
                   ],
                 ),
               ),
@@ -500,6 +473,103 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  void _loadExercises() {
+    _exercisesFuture = _apiService.getAll();
+  }
+
+  Widget _buildExerciseList() {
+    print('>>> _buildExerciseList');
+    return FutureBuilder<List<Exercise>>(
+      future: _exercisesFuture,
+      builder: (context, snapshot) {
+        print(
+          '>>> _buildExerciseList: snapshot state: ${snapshot.connectionState}',
+        );
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  CircularProgressIndicator(color: Colors.orange),
+                  SizedBox(height: 16),
+                  Text(
+                    'Carregando exercicios...',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          final errorMessage = snapshot.error.toString();
+
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  SizedBox(height: 16),
+                  Text(
+                    errorMessage,
+                    style: TextStyle(color: Colors.red[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasData) {
+          final exercises = snapshot.data!;
+
+          if (exercises.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.fitness_center,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Nenhum exercicio cadastrado',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Toque no botao + para adicionar',
+                      style: TextStyle(color: Colors.grey[400]),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return Column(
+            children: exercises.map((exercise) {
+              return ExerciseCard(
+                key: ValueKey(exercise.id),
+                exercise: exercise,
+                onDelete: () => _removeExercise(exercise.id!),
+              );
+            }).toList(),
+          );
+        }
+
+        return Text('Nenhum dado disponivel');
+      },
+    );
+  }
+
   /// Lista com staggered animation (cada item aparece em sequencia)
   Widget _buildStaggeredList() {
     return AnimatedBuilder(
@@ -539,7 +609,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: ExerciseCard(
                   key: ValueKey(_exercises[index].id),
                   exercise: _exercises[index],
-                  onDelete: () => _removeExercise(_exercises[index].id),
+                  onDelete: () =>
+                      _exercises[index].id ??
+                      _removeExercise(_exercises[index].id!),
                 ),
               ),
             );

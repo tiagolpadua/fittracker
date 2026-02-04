@@ -1,17 +1,50 @@
 class Exercise {
-  final String id;
+  final String? id;
   final String name;
   final int sets;
   final int reps;
   final String category;
   final double? weight;
+  final bool isCompleted;
 
   Exercise({
-    String? id,
+    this.id,
     required this.name,
     required this.sets,
     required this.reps,
     required this.category,
     this.weight,
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+    this.isCompleted = false,
+  });
+
+  /// Cria um Exercise a partir de um Map JSON
+  factory Exercise.fromJson(Map<String, dynamic> json) {
+    return Exercise(
+      id: json['id']?.toString(),
+      name: json['name'] as String? ?? '',
+      sets: json['sets'] as int? ?? 0,
+      reps: json['reps'] as int? ?? 0,
+      category: json['category'] as String? ?? '',
+      weight: (json['weight'] as num?)?.toDouble(),
+      isCompleted: json['isCompleted'] as bool? ?? false,
+    );
+  }
+
+  /// Converte o Exercise para um Map JSON
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'name': name,
+      'sets': sets,
+      'reps': reps,
+      'category': category,
+      if (weight != null) 'weight': weight,
+      'isCompleted': isCompleted,
+    };
+  }
+
+  @override
+  String toString() {
+    return 'Exercise{id: $id, name: $name, sets: $sets, reps: $reps, category: $category, weight: $weight, isCompleted: $isCompleted}';
+  }
 }

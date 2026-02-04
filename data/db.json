@@ -1,0 +1,68 @@
+{
+    "exercicios": [
+        {
+            "id": "1",
+            "name": "AAAASupino Reto",
+            "sets": 4,
+            "reps": 12,
+            "category": "Peito",
+            "isCompleted": false
+        },
+        {
+            "id": "2",
+            "name": "Supino Inclinado",
+            "sets": 3,
+            "reps": 12,
+            "category": "Peito",
+            "isCompleted": false
+        },
+        {
+            "id": "3",
+            "name": "Agachamento",
+            "sets": 4,
+            "reps": 10,
+            "category": "Pernas",
+            "isCompleted": false
+        },
+        {
+            "id": "4",
+            "name": "Leg Press",
+            "sets": 3,
+            "reps": 15,
+            "category": "Pernas",
+            "isCompleted": false
+        },
+        {
+            "id": "5",
+            "name": "Remada Curvada",
+            "sets": 4,
+            "reps": 12,
+            "category": "Costas",
+            "isCompleted": false
+        },
+        {
+            "id": "6",
+            "name": "Puxada Frontal",
+            "sets": 3,
+            "reps": 12,
+            "category": "Costas",
+            "isCompleted": false
+        },
+        {
+            "id": "7",
+            "name": "Desenvolvimento",
+            "sets": 3,
+            "reps": 10,
+            "category": "Ombros",
+            "isCompleted": false
+        },
+        {
+            "id": "8",
+            "name": "Rosca Direta",
+            "sets": 3,
+            "reps": 15,
+            "category": "Bracos",
+            "isCompleted": false
+        }
+    ]
+}
