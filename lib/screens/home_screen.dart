@@ -207,6 +207,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               actions: [
                 IconButton(
+                  icon: Icon(Icons.battery_full),
+                  onPressed: () => Navigator.pushNamed(
+                      context, AppConstants.routeBattery),
+                  tooltip: 'Bateria',
+                ),
+                IconButton(
                   icon: Icon(Icons.replay),
                   onPressed: _replayListAnimation,
                   tooltip: 'Replay animacao',
