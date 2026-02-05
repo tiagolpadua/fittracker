@@ -37,4 +37,5 @@ class AppConstants {
   static const String routeHome = '/';
   static const String routeNewExercise = '/exercise/new';
   static const String routeTimer = '/timer';
+  static const String routeBattery = '/battery';
 }

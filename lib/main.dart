@@ -1,6 +1,7 @@
 import 'package:fittracker/config/app_theme.dart';
 import 'package:fittracker/config/settings_provider.dart';
 import 'package:fittracker/constants/app_constants.dart';
+import 'package:fittracker/screens/battery_screen.dart';
 import 'package:fittracker/screens/home_screen.dart';
 import 'package:fittracker/screens/new_exercise_screen.dart';
 import 'package:fittracker/screens/timer_screen.dart';
@@ -38,6 +39,7 @@ class FitTrackerApp extends StatelessWidget {
             AppConstants.routeNewExercise: (context) =>
                 const NewExerciseScreen(),
             AppConstants.routeTimer: (context) => const TimerScreen(),
+            AppConstants.routeBattery: (context) => const BatteryScreen(),
           },
         );
       },
