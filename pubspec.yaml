@@ -37,6 +37,11 @@ dependencies:
   provider: ^6.1.5+1
   http: ^1.6.0
 
+  # Pacote de modelos compartilhados do FitTracker
+  fittracker_core:
+    path: ../fittracker_core
+  flutter_modular: ^6.4.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

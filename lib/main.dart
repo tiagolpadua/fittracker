@@ -1,48 +1,17 @@
-import 'package:fittracker/config/app_theme.dart';
-import 'package:fittracker/config/settings_provider.dart';
-import 'package:fittracker/constants/app_constants.dart';
-import 'package:fittracker/screens/battery_screen.dart';
-import 'package:fittracker/screens/home_screen.dart';
-import 'package:fittracker/screens/new_exercise_screen.dart';
-import 'package:fittracker/screens/timer_screen.dart';
+// FitTracker - Aula 09: Pacotes, Plugins e Modularizacao (Flutter Modular)
+//
+// Demonstra:
+// - Estrutura modular com Flutter Modular
+// - Separacao de modelos em pacote externo (fittracker_core)
+// - Injecao de dependencias via Modular binds
+// - Navegacao modularizada com Modular.to
+// - Servicos compartilhados (ExerciseApiService, TimerService)
+
+import 'package:fittracker/app_module.dart';
+import 'package:fittracker/app_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 
 void main() {
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => SettingsProvider(),
-      child: const FitTrackerApp(),
-    ),
-  );
-}
-
-class FitTrackerApp extends StatelessWidget {
-  const FitTrackerApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
-        print(
-          ">>>>> reconstruindo MaterialApp - themeMode: ${settings.themeMode}",
-        );
-        return MaterialApp(
-          title: 'FitTracker',
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: settings.themeMode,
-          initialRoute: AppConstants.routeHome,
-          routes: {
-            AppConstants.routeHome: (context) => const HomeScreen(),
-            AppConstants.routeNewExercise: (context) =>
-                const NewExerciseScreen(),
-            AppConstants.routeTimer: (context) => const TimerScreen(),
-            AppConstants.routeBattery: (context) => const BatteryScreen(),
-          },
-        );
-      },
-    );
-  }
+  runApp(ModularApp(module: AppModule(), child: const AppWidget()));
 }

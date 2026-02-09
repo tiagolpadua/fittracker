@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Utilitários para formatação de dados
+/// Utilitarios para formatacao de dados
 class FormatUtils {
   /// Formata segundos em formato de tempo (mm:ss)
   static String formatTime(int seconds) {
@@ -9,7 +9,7 @@ class FormatUtils {
     return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
-  /// Formata um valor em segundos para um preset legível
+  /// Formata um valor em segundos para um preset legivel
   static String formatPreset(int seconds) {
     if (seconds >= 60) {
       int mins = seconds ~/ 60;
@@ -19,7 +19,7 @@ class FormatUtils {
     return '${seconds}s';
   }
 
-  /// Retorna a cor baseada na categoria do exercício
+  /// Retorna a cor baseada na categoria do exercicio
   static Color getCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'peito':
