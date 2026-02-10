@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Configuração de tema da aplicação FitTracker
+/// Configuracao de tema da aplicacao FitTracker
 class AppTheme {
   static ThemeData lightTheme = ThemeData(
     primarySwatch: Colors.orange,

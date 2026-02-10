@@ -1,4 +1,4 @@
-/// Constantes da aplicação FitTracker
+/// Constantes da aplicacao FitTracker
 class AppConstants {
   // Presets de timer em segundos
   static const List<int> timerPresets = [30, 60, 90, 120];
@@ -6,13 +6,13 @@ class AppConstants {
   // Meta semanal de treinos
   static const int weeklyGoalWorkouts = 5;
 
-  // Duração de animações em ms
+  // Duracao de animacoes em ms
   static const int animationDurationMs = 300;
   static const int listAnimationDurationMs = 1500;
   static const int progressAnimationDurationMs = 1000;
   static const int pulseAnimationDurationMs = 1500;
 
-  // Categorias de exercícios
+  // Categorias de exercicios
   static const List<String> exerciseCategories = [
     'Peito',
     'Costas',
@@ -24,7 +24,7 @@ class AppConstants {
     'Cardio',
   ];
 
-  // Limites de validação
+  // Limites de validacao
   static const int minExerciseNameLength = 3;
   static const int minSets = 1;
   static const int maxSets = 20;
@@ -33,9 +33,9 @@ class AppConstants {
   static const double minWeight = 0;
   static const double maxWeight = 500;
 
-  // Rotas da aplicação
+  // Rotas da aplicacao (Flutter Modular)
   static const String routeHome = '/';
-  static const String routeNewExercise = '/exercise/new';
-  static const String routeTimer = '/timer';
-  static const String routeBattery = '/battery';
+  static const String routeExercises = '/exercises/';
+  static const String routeTimer = '/timer/';
+  static const String routeStats = '/stats/';
 }
