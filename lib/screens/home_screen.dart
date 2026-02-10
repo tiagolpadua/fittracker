@@ -1,9 +1,9 @@
 import 'package:fittracker/config/settings_provider.dart';
 import 'package:fittracker/constants/app_constants.dart';
-import 'package:fittracker/models/exercise.dart';
 import 'package:fittracker/service/exercice_api_service.dart';
 import 'package:fittracker/utils/format_utils.dart';
 import 'package:fittracker/widgets/exercise_card.dart';
+import 'package:fittracker_core/fittracker_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -359,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: [
               Text(
                 'Progresso Semanal',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
               ),
               SizedBox(height: 24),
 
