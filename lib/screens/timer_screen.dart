@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:fittracker/constants/app_constants.dart';
 import 'package:fittracker/service/timer_service.dart';
 import 'package:fittracker/utils/format_utils.dart';

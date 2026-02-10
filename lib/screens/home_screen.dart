@@ -26,10 +26,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Animation<double> _progressAnimation;
 
   // Estado de conteudo
-  bool _showContent = true;
+  final bool _showContent = true;
 
   // Dados
-  List<Exercise> _exercises = [];
+  final List<Exercise> _exercises = [];
 
   int _workoutsThisWeek = 0;
   final int _weeklyGoal = AppConstants.weeklyGoalWorkouts;
@@ -565,7 +565,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               return ExerciseCard(
                 key: ValueKey(exercise.id),
                 exercise: exercise,
-                onDelete: () => _removeExercise(exercise.id!),
+                onDelete: () => _removeExercise(exercise.id),
               );
             }).toList(),
           );
@@ -617,7 +617,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   exercise: _exercises[index],
                   onDelete: () =>
                       _exercises[index].id ??
-                      _removeExercise(_exercises[index].id!),
+                      _removeExercise(_exercises[index].id),
                 ),
               ),
             );
