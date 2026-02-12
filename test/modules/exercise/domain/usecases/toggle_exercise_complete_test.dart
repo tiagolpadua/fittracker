@@ -16,6 +16,7 @@ void main() {
   });
 
   test('deve marcar exercicio como completo', () async {
+    // Arrange
     const exercise = Exercise(
       id: '1',
       name: 'Supino',
@@ -29,8 +30,10 @@ void main() {
     when(mockRepo.getById('1')).thenAnswer((_) async => exercise);
     when(mockRepo.update(exerciseCompleted)).thenAnswer((_) async {});
 
+    // Act
     final result = await useCase.call('1');
 
+    // Assert
     expect(result.isCompleted, isTrue);
     verify(mockRepo.getById('1')).called(1);
     verify(mockRepo.update(exerciseCompleted)).called(1);
@@ -55,13 +58,17 @@ void main() {
     expect(result.isCompleted, isFalse);
   });
 
-  test('deve lancar ExerciseNotFoundFailure quando exercicio nao existe',
-      () async {
-    when(mockRepo.getById('999')).thenAnswer((_) async => null);
+  test(
+    'deve lancar ExerciseNotFoundFailure quando exercicio nao existe',
+    () async {
+      when(mockRepo.getById('999')).thenAnswer((_) async => null);
 
-    expect(() => useCase.call('999'),
-        throwsA(isA<ExerciseNotFoundFailure>()));
-  });
+      expect(
+        () => useCase.call('999'),
+        throwsA(isA<ExerciseNotFoundFailure>()),
+      );
+    },
+  );
 
   test('deve lancar ValidationFailure quando id e vazio', () {
     expect(() => useCase.call(''), throwsA(isA<ValidationFailure>()));

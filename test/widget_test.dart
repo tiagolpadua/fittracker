@@ -16,6 +16,7 @@ void main() {
     await tester.pumpWidget(
       ModularApp(module: AppModule(), child: const AppWidget()),
     );
+
     await tester.pumpAndSettle();
 
     expect(find.text('FitTracker'), findsWidgets);

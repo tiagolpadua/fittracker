@@ -1,3 +1,4 @@
+import 'package:fittracker/app/modules/exercise/external/datasources/exercise_datasource_in_memory.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:http/http.dart' as http;
 
@@ -18,8 +19,11 @@ import 'presenter/pages/exercise_list_page.dart';
 class ExerciseModule extends Module {
   @override
   void binds(Injector i) {
+    i.addInstance<http.Client>(http.Client());
+
     i.addSingleton<ExerciseDataSource>(
       () => ExerciseDataSourceHttp(i.get<http.Client>()),
+      // () => ExerciseDataSourceInMemory(),
     );
 
     i.addSingleton<ExerciseRepository>(

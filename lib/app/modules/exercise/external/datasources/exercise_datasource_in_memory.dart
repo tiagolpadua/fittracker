@@ -6,7 +6,7 @@ class ExerciseDataSourceInMemory implements ExerciseDataSource {
   final List<ExerciseModel> _exercises = [
     const ExerciseModel(
       id: '1',
-      name: 'Supino Reto',
+      name: 'Supino Reto Em Memória',
       sets: 4,
       reps: 12,
       category: 'Peito',
